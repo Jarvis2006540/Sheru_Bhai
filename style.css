@@ -125,7 +125,7 @@ html, body {
 /* ==================== TOAST NOTIFICATIONS ==================== */
 #toastContainer {
   position: fixed;
-  top: 76px;
+  top: 108px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 90;

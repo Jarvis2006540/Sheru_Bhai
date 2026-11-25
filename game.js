@@ -8,11 +8,19 @@
   const AUDIO = window.GAME_AUDIO;
   const RENDERER = window.GAME_RENDERER;
 
-  // Canvas & Context
+  // Canvas & Context (alpha:false + desynchronized reduces mobile compositor overhead for 60fps)
   const canvas = document.getElementById('gameCanvas');
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true }) || canvas.getContext('2d');
   const previewCanvas = document.getElementById('menuPreviewCanvas');
   const previewCtx = previewCanvas.getContext('2d');
+
+  // Detect touch devices (mobiles & tablets) for 60fps scaling & on-screen buttons
+  const isTouchDevice = window.matchMedia('(pointer: coarse)').matches ||
+    window.matchMedia('(hover: none)').matches ||
+    ('ontouchstart' in window && navigator.maxTouchPoints > 0);
+  if (isTouchDevice) {
+    document.body.classList.add('touch-controls-on');
+  }
 
   // UI Elements
   const el = {
@@ -174,7 +182,8 @@
   function resizeCanvas() {
     const cssW = window.innerWidth;
     const cssH = window.innerHeight;
-    const maxDpr = cssW <= 1024 ? 1.25 : 1.5;
+    // Cap DPR at 1 on touch mobiles/tablets for locked 60fps rasterization; 1.5 on desktop
+    const maxDpr = isTouchDevice || cssW <= 1024 ? 1 : 1.5;
     const dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
     viewScale = Math.max(0.54, Math.min(1.3, Math.min(cssW / 820, cssH / 560)));
     width = cssW / viewScale;
@@ -253,8 +262,9 @@
     el.btnSpecialMobile.classList.remove('hidden');
     el.hudWorldName.textContent = run.world.name;
     el.hudDiffBadge.textContent = run.diff.label;
-    const isDesktop = !window.matchMedia('(pointer: coarse)').matches && window.innerWidth > 1024;
+    const isDesktop = !isTouchDevice && window.innerWidth > 1024;
     el.runTutorialHint.classList.toggle('hidden', !isDesktop);
+    resetHudCache();
 
     // Try to enter fullscreen & lock landscape on supported devices
     try {
@@ -847,7 +857,7 @@
   // ==================== PARTICLES ====================
   function spawnParticles(x, y, count, color) {
     if (!STORAGE.getState().settings.particles) return;
-    const maxParticles = 36;
+    const maxParticles = isTouchDevice ? 24 : 36;
     const allowed = Math.min(count, maxParticles - run.particles.length);
     for (let i = 0; i < allowed; i++) {
       run.particles.push({
@@ -1228,29 +1238,81 @@
   }
 
   let lastPowerHtml = '';
+  let lastHudScore = -1;
+  let lastHudMult = '';
+  let lastHudDist = -1;
+  let lastHudCoins = -1;
+  let lastHudGems = -1;
+  let lastHudMissionText = '';
+  let lastHudMissionPassed = null;
+  let lastSpecialOpacity = '';
+  let lastSpecialLabel = '';
+
+  function resetHudCache() {
+    lastPowerHtml = '';
+    lastHudScore = -1;
+    lastHudMult = '';
+    lastHudDist = -1;
+    lastHudCoins = -1;
+    lastHudGems = -1;
+    lastHudMissionText = '';
+    lastHudMissionPassed = null;
+    lastSpecialOpacity = '';
+    lastSpecialLabel = '';
+  }
 
   function updateHud() {
-    el.hudScore.textContent = Math.floor(run.score).toLocaleString();
-    const mult = (run.activePowers.speed ? 2 : 1) * run.diff.scoreMult;
-    el.hudMultiplier.textContent = `x${mult.toFixed(mult % 1 === 0 ? 0 : 1)}`;
-    el.hudDistance.textContent = `${Math.floor(run.distance)}m`;
-    el.hudCoins.textContent = run.coins;
-    el.hudGems.textContent = run.gems;
+    const scoreInt = Math.floor(run.score);
+    if (scoreInt !== lastHudScore) {
+      lastHudScore = scoreInt;
+      el.hudScore.textContent = scoreInt.toLocaleString();
+    }
 
-    // Active Mission / Endless HUD Pill
+    const mult = (run.activePowers.speed ? 2 : 1) * run.diff.scoreMult;
+    const multStr = `x${mult.toFixed(mult % 1 === 0 ? 0 : 1)}`;
+    if (multStr !== lastHudMult) {
+      lastHudMult = multStr;
+      el.hudMultiplier.textContent = multStr;
+    }
+
+    const distInt = Math.floor(run.distance);
+    if (distInt !== lastHudDist) {
+      lastHudDist = distInt;
+      el.hudDistance.textContent = `${distInt}m`;
+    }
+
+    if (run.coins !== lastHudCoins) {
+      lastHudCoins = run.coins;
+      el.hudCoins.textContent = run.coins;
+    }
+
+    if (run.gems !== lastHudGems) {
+      lastHudGems = run.gems;
+      el.hudGems.textContent = run.gems;
+    }
+
+    // Active Mission / Endless HUD Pill (only update DOM when changed)
+    let missionText = '';
+    let missionPassed = false;
     if (gameMode === 'endless') {
-      el.hudMissionPill.classList.remove('passed');
-      el.hudMissionText.textContent = '∞ ENDLESS MODE — Chase High Score & Asharfi!';
+      missionText = '∞ ENDLESS MODE — Chase High Score & Asharfi!';
     } else {
       const save = STORAGE.getState();
       const am = STORAGE.getCurrentMission();
       const target = STORAGE.getMissionTarget(am);
-      const passed = save.completedMissions.includes(am.id);
-      const val = passed ? target : Math.min(target, STORAGE.getMissionCurrentValue(am));
-      el.hudMissionPill.classList.toggle('passed', passed);
-      el.hudMissionText.textContent = passed
+      missionPassed = save.completedMissions.includes(am.id);
+      const val = missionPassed ? target : Math.min(target, STORAGE.getMissionCurrentValue(am));
+      missionText = missionPassed
         ? `#${am.id} ${am.title} — PASSED ✓`
         : `#${am.id} ${am.title} (${val}/${target})`;
+    }
+    if (missionPassed !== lastHudMissionPassed) {
+      lastHudMissionPassed = missionPassed;
+      el.hudMissionPill.classList.toggle('passed', missionPassed);
+    }
+    if (missionText !== lastHudMissionText) {
+      lastHudMissionText = missionText;
+      el.hudMissionText.textContent = missionText;
     }
 
     // Active Powerup Pills (only touch DOM when changed)
@@ -1267,10 +1329,18 @@
       lastPowerHtml = powerHtml;
     }
 
-    el.btnSpecialMobile.style.opacity = run.specialCooldown > 0 ? '0.45' : '1';
+    const spOpacity = run.specialCooldown > 0 ? '0.45' : '1';
+    if (spOpacity !== lastSpecialOpacity) {
+      lastSpecialOpacity = spOpacity;
+      el.btnSpecialMobile.style.opacity = spOpacity;
+    }
     const specialText = el.btnSpecialMobile.querySelector('.special-text');
     if (specialText) {
-      specialText.textContent = run.specialCooldown > 0 ? `${Math.ceil(run.specialCooldown)}s` : 'POWER';
+      const spLabel = run.specialCooldown > 0 ? `${Math.ceil(run.specialCooldown)}s` : 'POWER';
+      if (spLabel !== lastSpecialLabel) {
+        lastSpecialLabel = spLabel;
+        specialText.textContent = spLabel;
+      }
     }
   }
 
@@ -1337,38 +1407,44 @@
       flash: p.invulnTimer > 0 && Math.floor(globalTime * 20) % 2 === 0
     });
 
-    // Particles
-    for (const pt of run.particles) {
-      ctx.globalAlpha = Math.max(0, pt.life / pt.maxLife);
-      ctx.fillStyle = pt.color;
-      ctx.beginPath();
-      ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
-      ctx.fill();
+    // Particles (fast rects/arcs)
+    if (run.particles.length > 0) {
+      for (let i = 0; i < run.particles.length; i++) {
+        const pt = run.particles[i];
+        ctx.globalAlpha = Math.max(0, pt.life / pt.maxLife);
+        ctx.fillStyle = pt.color;
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
     }
-    ctx.globalAlpha = 1;
 
-    // Floating Texts
-    ctx.font = 'bold 15px Poppins, sans-serif';
-    ctx.textAlign = 'center';
-    for (const ft of run.floatingTexts) {
-      ctx.globalAlpha = Math.max(0, ft.life);
+    // Floating Texts (avoid setting ctx.font when list is empty)
+    if (run.floatingTexts.length > 0) {
+      ctx.font = 'bold 15px Poppins, sans-serif';
+      ctx.textAlign = 'center';
       ctx.fillStyle = '#ffd966';
-      ctx.fillText(ft.text, ft.x, ft.y);
+      for (let i = 0; i < run.floatingTexts.length; i++) {
+        const ft = run.floatingTexts[i];
+        ctx.globalAlpha = Math.max(0, ft.life);
+        ctx.fillText(ft.text, ft.x, ft.y);
+      }
+      ctx.globalAlpha = 1;
     }
-    ctx.globalAlpha = 1;
 
-    // Speed Streaks
+    // Speed Streaks (single batched stroke path)
     if (run.activePowers.speed) {
       ctx.strokeStyle = 'rgba(255, 224, 125, 0.35)';
       ctx.lineWidth = 2;
+      ctx.beginPath();
       for (let i = 0; i < 6; i++) {
         const sy = ((i * 110 + globalTime * 300) % groundY);
         const sx = ((i * 270 - globalTime * 1200) % width + width) % width;
-        ctx.beginPath();
         ctx.moveTo(sx, sy);
         ctx.lineTo(sx + 80, sy);
-        ctx.stroke();
       }
+      ctx.stroke();
     }
 
     // Sandstorm or Time Freeze Overlay
@@ -1482,40 +1558,29 @@
     }
   });
 
-  el.btnSpecialMobile.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    triggerSpecial();
-  }, { passive: false });
-
-  el.btnSpecialMobile.addEventListener('click', (e) => {
-    e.stopPropagation();
-    triggerSpecial();
-  });
-
-  if (el.btnJumpMobile) {
-    el.btnJumpMobile.addEventListener('touchstart', (e) => {
+  function bindTouchActionButton(btn, actionFn) {
+    if (!btn) return;
+    let lastTouchTs = 0;
+    btn.addEventListener('touchstart', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      triggerJump();
+      lastTouchTs = performance.now();
+      btn.classList.add('pressed');
+      if (gameState === 'PLAYING') actionFn();
     }, { passive: false });
-    el.btnJumpMobile.addEventListener('click', (e) => {
+    const release = () => btn.classList.remove('pressed');
+    btn.addEventListener('touchend', release, { passive: true });
+    btn.addEventListener('touchcancel', release, { passive: true });
+    btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      triggerJump();
+      if (performance.now() - lastTouchTs < 450) return;
+      if (gameState === 'PLAYING') actionFn();
     });
   }
 
-  if (el.btnSlideMobile) {
-    el.btnSlideMobile.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      triggerSlide();
-    }, { passive: false });
-    el.btnSlideMobile.addEventListener('click', (e) => {
-      e.stopPropagation();
-      triggerSlide();
-    });
-  }
+  bindTouchActionButton(el.btnSpecialMobile, triggerSpecial);
+  bindTouchActionButton(el.btnJumpMobile, triggerJump);
+  bindTouchActionButton(el.btnSlideMobile, triggerSlide);
 
   // ==================== MODALS & RENDERERS ====================
   function openModal(id) {

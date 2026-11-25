@@ -748,13 +748,14 @@ html, body {
   background: var(--gold-bright);
 }
 
-/* Mobile Controls */
+/* Mobile & Tablet Touch Controls */
 .mobile-controls {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
   width: 100%;
   gap: 12px;
+  padding-bottom: max(4px, env(safe-area-inset-bottom));
 }
 
 .mobile-touch-left, .mobile-touch-right {
@@ -765,13 +766,65 @@ html, body {
 
 .touch-action-btn,
 .mobile-hint {
-  display: none !important;
+  display: none;
 }
 
-@media (pointer: coarse), (max-width: 1024px) {
+.touch-action-btn {
+  pointer-events: auto;
+  touch-action: none;
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 217, 102, 0.85);
+  background: radial-gradient(circle at 30% 30%, rgba(44, 34, 68, 0.9), rgba(14, 10, 24, 0.94));
+  color: var(--gold-bright);
+  font-weight: 800;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(212, 175, 55, 0.25);
+  cursor: pointer;
+  transition: transform 0.08s ease, filter 0.08s ease;
+}
+
+.touch-action-btn span {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.touch-action-btn small {
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+}
+
+.touch-action-btn.jump-btn {
+  background: radial-gradient(circle at 30% 30%, rgba(212, 175, 55, 0.36), rgba(22, 16, 36, 0.94));
+}
+
+.touch-action-btn:active,
+.touch-action-btn.pressed,
+.special-btn:active,
+.special-btn.pressed {
+  transform: scale(0.9);
+  filter: brightness(1.22);
+}
+
+@media (pointer: coarse), (hover: none), (max-width: 1024px) {
   #runTutorialHint {
     display: none !important;
   }
+  .touch-action-btn {
+    display: flex;
+  }
+}
+
+body.touch-controls-on .touch-action-btn {
+  display: flex;
+}
+
+body.touch-controls-on #runTutorialHint {
+  display: none !important;
 }
 
 .special-btn {

@@ -16,6 +16,14 @@
 
   // UI Elements
   const el = {
+    loadingScreen: document.getElementById('loadingScreen'),
+    loadingHeroImg: document.getElementById('loadingHeroImg'),
+    loadingLogoImg: document.getElementById('loadingLogoImg'),
+    loadingStatusText: document.getElementById('loadingStatusText'),
+    loadingPercent: document.getElementById('loadingPercent'),
+    loadingBarFill: document.getElementById('loadingBarFill'),
+    loadingTipText: document.getElementById('loadingTipText'),
+    btnSkipLoading: document.getElementById('btnSkipLoading'),
     mainMenu: document.getElementById('mainMenu'),
     gameplayHud: document.getElementById('gameplayHud'),
     pauseModal: document.getElementById('pauseModal'),
@@ -89,7 +97,7 @@
   };
 
   // Game State
-  let gameState = 'MENU'; // MENU | PLAYING | PAUSED | GAMEOVER
+  let gameState = 'LOADING'; // LOADING | MENU | PLAYING | PAUSED | GAMEOVER
   let gameMode = 'mission'; // mission | endless
   let width = 1280;
   let height = 720;
@@ -1275,7 +1283,7 @@
     const save = STORAGE.getState();
     const skin = DATA.SKINS.find(s => s.id === save.selectedSkin) || DATA.SKINS[0];
 
-    if (gameState === 'MENU') {
+    if (gameState === 'MENU' || gameState === 'LOADING') {
       // Draw ambient palace background behind menu
       const world = DATA.WORLDS.find(w => w.id === save.selectedWorld) || DATA.WORLDS[0];
       RENDERER.drawBackground(ctx, width, height, groundY, world, globalTime * 60, globalTime);
@@ -1874,8 +1882,127 @@
     showToast('Progress Reset Complete');
   });
 
+  // ==================== LOADING SCREEN ====================
+  function startLoadingScreen() {
+    if (!el.loadingScreen) {
+      gameState = 'MENU';
+      el.mainMenu.classList.remove('hidden');
+      el.mainMenu.classList.add('active');
+      return;
+    }
+
+    const loadingSteps = [
+      { at: 0, text: 'Summoning Sheru Bhai...' },
+      { at: 22, text: 'Polishing Royal Gold & Chains...' },
+      { at: 46, text: 'Preparing 11 Indian Kingdoms...' },
+      { at: 72, text: 'Tuning Official Phonk Soundtrack...' },
+      { at: 92, text: 'Opening Palace Gates...' },
+      { at: 100, text: 'Welcome, Sheru Bhai!' }
+    ];
+
+    const loadingTips = [
+      'Tip: Press <strong>SPACE</strong> or <strong>Swipe Up</strong> twice for a Royal Double Jump!',
+      'Tip: Hit <strong>SHIFT</strong> or tap <strong>⚡</strong> to unleash your Royal Strike!',
+      'Tip: Explore <strong>11 Indian Kingdoms</strong> from Jaipur to Chennai & Bengaluru!',
+      'Tip: Hold <strong>S / Swipe Down</strong> in mid-air for a fast slam & slide!'
+    ];
+
+    const preloadImage = (src) => new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(true);
+      img.onerror = () => resolve(false);
+      img.src = src;
+      if (img.complete) resolve(true);
+    });
+
+    const waitFonts = (document.fonts && document.fonts.ready)
+      ? Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 1200))])
+      : Promise.resolve();
+
+    let assetsReady = false;
+    Promise.all([
+      preloadImage('assets/royal-sheru-bhai-name-wallpaper.png'),
+      preloadImage('assets/sheru-bhai-logo-768x768.jpg'),
+      waitFonts
+    ]).then(() => {
+      assetsReady = true;
+    });
+
+    // Safety fallback so loading never stalls
+    setTimeout(() => { assetsReady = true; }, 3200);
+
+    const minDurationMs = 2400;
+    const startTs = performance.now();
+    let tipIdx = 0;
+    let finished = false;
+    const trackEl = el.loadingBarFill ? el.loadingBarFill.parentElement : null;
+
+    const tipInterval = setInterval(() => {
+      tipIdx = (tipIdx + 1) % loadingTips.length;
+      if (el.loadingTipText) {
+        el.loadingTipText.innerHTML = loadingTips[tipIdx];
+      }
+    }, 1400);
+
+    function finishLoading() {
+      if (finished) return;
+      finished = true;
+      clearInterval(tipInterval);
+      if (el.loadingBarFill) el.loadingBarFill.style.width = '100%';
+      if (el.loadingPercent) el.loadingPercent.textContent = '100%';
+      if (el.loadingStatusText) el.loadingStatusText.textContent = 'Welcome, Sheru Bhai!';
+      if (trackEl) trackEl.setAttribute('aria-valuenow', '100');
+
+      gameState = 'MENU';
+      el.mainMenu.classList.remove('hidden');
+      el.mainMenu.classList.add('active');
+      el.loadingScreen.classList.add('fade-out');
+
+      setTimeout(() => {
+        el.loadingScreen.classList.add('hidden');
+      }, 580);
+    }
+
+    if (el.btnSkipLoading) {
+      el.btnSkipLoading.addEventListener('click', () => {
+        AUDIO.ensureContext();
+        AUDIO.playSfx('click');
+        finishLoading();
+      });
+    }
+
+    function tickLoading(now) {
+      if (finished) return;
+      const elapsed = now - startTs;
+      const rawRatio = Math.min(1, elapsed / minDurationMs);
+      // Ease out smoothly, capping at 94% until assets finish decoding
+      const eased = 1 - Math.pow(1 - rawRatio, 2.2);
+      const maxPct = assetsReady ? 100 : 94;
+      const pct = Math.min(maxPct, Math.floor(eased * 100));
+
+      if (el.loadingBarFill) el.loadingBarFill.style.width = `${pct}%`;
+      if (el.loadingPercent) el.loadingPercent.textContent = `${pct}%`;
+      if (trackEl) trackEl.setAttribute('aria-valuenow', String(pct));
+
+      let status = loadingSteps[0].text;
+      for (const s of loadingSteps) {
+        if (pct >= s.at) status = s.text;
+      }
+      if (el.loadingStatusText) el.loadingStatusText.textContent = status;
+
+      if (pct >= 100 && assetsReady) {
+        setTimeout(finishLoading, 320);
+        return;
+      }
+      requestAnimationFrame(tickLoading);
+    }
+
+    requestAnimationFrame(tickLoading);
+  }
+
   // Init
   refreshMenuUI();
   render();
+  startLoadingScreen();
   requestAnimationFrame(loop);
 })();

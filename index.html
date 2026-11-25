@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>SHERU BHAI – ROYAL ENDLESS RUN</title>
+  <link rel="icon" type="image/jpeg" href="assets/sheru-bhai-logo-768x768.jpg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -123,8 +124,67 @@
       </div>
     </div>
 
+    <!-- ==================== LOADING SCREEN ==================== -->
+    <div id="loadingScreen" class="loading-screen" role="status" aria-label="Loading Sheru Bhai">
+      <div class="loading-backdrop" aria-hidden="true">
+        <img src="assets/royal-sheru-bhai-name-wallpaper.png" alt="" class="loading-backdrop-img" />
+        <div class="loading-backdrop-vignette"></div>
+        <div class="loading-embers">
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+      </div>
+
+      <div class="loading-stage">
+        <div class="loading-poster-card">
+          <img
+            id="loadingHeroImg"
+            src="assets/royal-sheru-bhai-name-wallpaper.png"
+            alt="Sheru Bhai in Royal Suit at the Palace"
+            class="loading-poster-img"
+          />
+          <div class="loading-poster-sheen" aria-hidden="true"></div>
+          <div class="loading-poster-caption">
+            <span class="loading-crown-pill">👑 THE ROYAL KING</span>
+          </div>
+        </div>
+
+        <div class="loading-brand-panel">
+          <div class="loading-logo-wrap">
+            <div class="loading-logo-ring" aria-hidden="true"></div>
+            <img
+              id="loadingLogoImg"
+              src="assets/sheru-bhai-logo-768x768.jpg"
+              alt="Sheru Bhai Official Emblem"
+              class="loading-logo-img"
+            />
+          </div>
+
+          <div class="loading-edition-badge">👑 ROYAL INDIA EDITION</div>
+          <p class="loading-subtitle">ROYAL ENDLESS RUN</p>
+
+          <div class="loading-progress-box">
+            <div class="loading-progress-meta">
+              <span id="loadingStatusText" class="loading-status-text">Summoning Sheru Bhai...</span>
+              <span id="loadingPercent" class="loading-percent">0%</span>
+            </div>
+            <div class="loading-bar-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <div id="loadingBarFill" class="loading-bar-fill"></div>
+            </div>
+          </div>
+
+          <div id="loadingTipText" class="loading-tip">
+            Tip: Press <strong>SPACE</strong> or <strong>Swipe Up</strong> twice for a Royal Double Jump!
+          </div>
+
+          <button id="btnSkipLoading" class="loading-skip-btn" type="button">
+            SKIP ▶
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- ==================== MAIN MENU ==================== -->
-    <div id="mainMenu" class="screen-overlay active">
+    <div id="mainMenu" class="screen-overlay hidden">
       <div class="menu-container">
         <div class="menu-top-bar">
           <div class="brand-badge">👑 ROYAL INDIA EDITION</div>

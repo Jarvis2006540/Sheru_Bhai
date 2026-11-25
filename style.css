@@ -43,7 +43,9 @@
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  padding: 32px;
+  padding: 24px;
+  width: 100%;
+  max-width: 420px;
 }
 
 .rotate-icon {
@@ -60,7 +62,7 @@
 
 #rotateOverlay h2 {
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: clamp(1.15rem, 5vw, 1.5rem);
   color: var(--gold-bright);
   letter-spacing: 0.08em;
 }
@@ -481,19 +483,21 @@ html, body {
   background: radial-gradient(circle at 50% 25%, rgba(56, 38, 18, 0.72), rgba(10, 8, 18, 0.94));
   backdrop-filter: blur(6px);
   display: flex;
-  align-items: center;
+  align-items: safe center;
   justify-content: center;
-  padding: 16px;
+  padding: clamp(8px, 1.8vh, 18px) clamp(10px, 2vw, 20px);
   overflow-y: auto;
 }
 
 .menu-container {
   width: 100%;
-  max-width: 1040px;
+  max-width: min(1040px, 96vw);
+  max-height: calc(100dvh - 16px);
+  overflow-y: auto;
   background: var(--bg-panel);
   border-radius: 22px;
   box-shadow: var(--shadow-royal);
-  padding: 22px 26px;
+  padding: clamp(12px, 2vh, 22px) clamp(14px, 2.2vw, 26px);
   animation: fadeUp 0.35s ease-out;
 }
 
@@ -769,17 +773,18 @@ html, body {
   background: rgba(8, 6, 14, 0.82);
   backdrop-filter: blur(8px);
   display: flex;
-  align-items: center;
+  align-items: safe center;
   justify-content: center;
-  padding: 16px;
+  padding: clamp(8px, 2vh, 16px);
+  overflow-y: auto;
 }
 
 .modal-card {
   background: var(--bg-panel);
   border-radius: 20px;
   box-shadow: var(--shadow-royal);
-  padding: 24px;
-  max-height: 90vh;
+  padding: clamp(14px, 2.5vh, 24px);
+  max-height: 92dvh;
   overflow-y: auto;
   width: 100%;
   animation: fadeUp 0.25s ease-out;
@@ -1259,74 +1264,154 @@ kbd {
   }
 }
 
+/* Laptop & Short Desktop Windows (e.g., 1366x768, 1280x720, 125% scaling) */
+@media (max-height: 760px) and (min-width: 821px) {
+  .menu-container {
+    padding: 14px 22px;
+  }
+  .menu-top-bar {
+    margin-bottom: 10px;
+  }
+  .menu-hero {
+    grid-template-columns: 260px 1fr;
+    gap: 20px;
+  }
+  #menuPreviewCanvas {
+    max-width: 215px;
+  }
+  .game-title {
+    font-size: clamp(1.7rem, 3.2vw, 2.5rem);
+  }
+  .game-subtitle {
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+  }
+  .best-score-banner {
+    padding: 8px 14px;
+    margin-bottom: 10px;
+  }
+  .difficulty-selector {
+    margin-bottom: 10px;
+  }
+  .btn-primary-royal {
+    padding: 11px 20px;
+    font-size: 1.05rem;
+  }
+  .menu-grid {
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .btn-secondary-royal {
+    padding: 8px 10px;
+    font-size: 0.8rem;
+  }
+  .menu-music-credits-bar {
+    margin-top: 8px;
+    padding: 5px 10px;
+    font-size: 0.7rem;
+  }
+}
+
 /* Landscape Mobile & Short Screens */
 @media (max-height: 540px) and (orientation: landscape) {
   .screen-overlay {
     display: flex;
-    align-items: center;
+    align-items: safe center;
     padding: 6px;
   }
   .menu-container {
-    padding: 10px 14px;
+    padding: 8px 14px;
+    max-height: calc(100dvh - 12px);
   }
   .menu-top-bar {
-    margin-bottom: 6px;
+    margin-bottom: 5px;
   }
   .brand-badge, .wallet-item {
     padding: 3px 10px;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
   }
   .menu-hero {
-    grid-template-columns: 145px minmax(0, 1fr);
-    gap: 14px;
+    grid-template-columns: 135px minmax(0, 1fr);
+    gap: 12px;
     align-items: center;
   }
   .hero-showcase {
-    max-width: 145px;
-    padding: 5px;
+    max-width: 135px;
+    padding: 4px;
   }
   #menuPreviewCanvas {
-    max-width: 112px;
+    max-width: 104px;
   }
   .skin-tag {
-    font-size: 0.68rem;
-    margin-top: 4px;
+    font-size: 0.65rem;
+    margin-top: 3px;
   }
   .game-title {
-    font-size: 1.5rem;
+    font-size: 1.35rem;
   }
   .game-subtitle {
-    font-size: 0.72rem;
-    margin-bottom: 6px;
+    font-size: 0.68rem;
+    margin-bottom: 5px;
   }
   .best-score-banner, .difficulty-selector {
-    margin-bottom: 6px;
+    margin-bottom: 5px;
     padding: 4px 10px;
   }
   .best-val {
-    font-size: 0.92rem;
+    font-size: 0.88rem;
   }
   .diff-btn, .mode-btn {
-    padding: 4px 10px;
-    font-size: 0.72rem;
+    padding: 3px 9px;
+    font-size: 0.7rem;
   }
   .btn-primary-royal {
-    padding: 8px 14px;
-    font-size: 0.9rem;
+    padding: 7px 12px;
+    font-size: 0.88rem;
   }
   .menu-grid {
     grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 6px;
-    margin-top: 6px;
+    gap: 5px;
+    margin-top: 5px;
   }
   .btn-secondary-royal {
-    padding: 5px 4px;
-    font-size: 0.68rem;
+    padding: 4px 3px;
+    font-size: 0.66rem;
   }
-  .btn-secondary-royal .btn-ico { font-size: 1rem; }
-  .btn-secondary-royal small { font-size: 0.62rem; }
+  .btn-secondary-royal .btn-ico { font-size: 0.95rem; }
+  .btn-secondary-royal small { font-size: 0.58rem; }
+  .menu-music-credits-bar {
+    margin-top: 5px;
+    padding: 4px 8px;
+    font-size: 0.66rem;
+  }
   .run-tutorial {
     display: none;
+  }
+  .hud-stat, .currency-pill {
+    padding: 4px 9px;
+    font-size: 0.74rem;
+  }
+  .hud-value {
+    font-size: 0.86rem;
+  }
+  .hud-icon-btn {
+    width: 34px;
+    height: 34px;
+    font-size: 0.82rem;
+  }
+  .hud-sub-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 4px;
+  }
+  .hud-mission-pill, .hud-music-pill {
+    font-size: 0.68rem;
+    padding: 3px 9px;
+  }
+  .touch-action-btn, .special-btn {
+    width: 56px;
+    height: 56px;
   }
 }
 

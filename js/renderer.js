@@ -499,8 +499,7 @@ window.GAME_RENDERER = (() => {
     const exRight = fx + (isIdle || isVictory ? 8.5 : 11);
     if (skin.sunglasses) {
       // --- Black Aviator Sunglasses with Gold Frame ---
-      const drawLens = (cx, cy) => {
-        ctx.beginPath();
+      const traceLens = (cx, cy) => {
         ctx.moveTo(cx - 7.5, cy - 5);
         ctx.quadraticCurveTo(cx, cy - 7.5, cx + 7.5, cy - 5);
         ctx.quadraticCurveTo(cx + 9, cy + 1, cx + 6, cy + 5);
@@ -508,20 +507,22 @@ window.GAME_RENDERER = (() => {
         ctx.quadraticCurveTo(cx - 9, cy + 1, cx - 7.5, cy - 5);
         ctx.closePath();
       };
-      // Dark tinted lenses
-      ctx.fillStyle = 'rgba(10, 10, 18, 0.92)';
+      // Dark tinted lenses (both in one path or filled individually)
+      ctx.fillStyle = '#0d0d14';
       ctx.beginPath();
-      drawLens(exLeft, headY - 3);
-      drawLens(exRight, headY - 3);
+      traceLens(exLeft, headY - 3);
+      ctx.fill();
+      ctx.beginPath();
+      traceLens(exRight, headY - 3);
       ctx.fill();
       // Gold metal frame
       ctx.strokeStyle = '#d4af37';
       ctx.lineWidth = 1.8;
       ctx.beginPath();
-      drawLens(exLeft, headY - 3);
+      traceLens(exLeft, headY - 3);
       ctx.stroke();
       ctx.beginPath();
-      drawLens(exRight, headY - 3);
+      traceLens(exRight, headY - 3);
       ctx.stroke();
       // Bridge between lenses
       ctx.beginPath();

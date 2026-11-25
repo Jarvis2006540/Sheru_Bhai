@@ -466,7 +466,7 @@
     } else {
       let cleared = 0;
       run.obstacles = run.obstacles.filter(o => {
-        if (o.x < run.player.x + 360) {
+        if (o.kind !== 'moving_platform' && o.x < run.player.x + 360) {
           cleared++;
           spawnParticles(o.x + o.w / 2, o.y + o.h / 2, 10, '#ffd966');
           return false;
@@ -517,29 +517,31 @@
       if (pool.length === 0) pool = run.world.obstacles;
     }
 
+    const AIR_OBSTACLES = ['flying_drone', 'hanging_lantern', 'low_banner', 'flying_arrow', 'swinging_chain', 'flying_bird'];
+    const MOVING_OBSTACLES = ['royal_guard', 'running_bull', 'rolling_barrel', 'moving_vehicle', 'wild_boar', 'moving_platform', 'flying_arrow'];
     const kind = pool[Math.floor(Math.random() * pool.length)];
-    const isAir = ['flying_drone', 'hanging_lantern', 'low_banner', 'flying_arrow', 'swinging_chain', 'flying_bird'].includes(kind);
-    const isMoving = ['royal_guard', 'running_bull', 'rolling_barrel', 'moving_vehicle', 'wild_boar', 'moving_platform'].includes(kind);
+    const isAir = AIR_OBSTACLES.includes(kind);
+    const isMoving = MOVING_OBSTACLES.includes(kind);
 
     let w = 48, h = 52, y = groundY - h;
     let vxExtra = 0;
 
-    if (kind === 'water_puddle') { w = 78; h = 16; y = groundY - h; }
-    else if (kind === 'spikes') { w = 58; h = 34; y = groundY - h; }
-    else if (kind === 'fallen_tree' || kind === 'broken_cart') { w = 78; h = 44; y = groundY - h; }
+    if (kind === 'water_puddle') { w = 82; h = 16; y = groundY - h; }
+    else if (kind === 'spikes') { w = 60; h = 34; y = groundY - h; }
+    else if (kind === 'fallen_tree' || kind === 'broken_cart') { w = 82; h = 44; y = groundY - h; }
     else if (kind === 'giant_rock' || kind === 'rolling_stone') { w = 54; h = 54; y = groundY - h; }
-    else if (kind === 'laser_barrier') { w = 34; h = 76; y = groundY - h; }
-    else if (kind === 'moving_vehicle') { w = 86; h = 56; y = groundY - h; }
+    else if (kind === 'laser_barrier') { w = 36; h = 76; y = groundY - h; }
+    else if (kind === 'moving_vehicle') { w = 92; h = 58; y = groundY - h; }
     else if (isAir) {
-      w = 56;
-      h = 44;
-      y = groundY - 108;
+      w = kind === 'flying_arrow' ? 62 : 56;
+      h = kind === 'flying_arrow' ? 28 : 44;
+      y = kind === 'flying_arrow' ? groundY - 96 : groundY - 108;
     }
 
     if (isMoving) {
-      vxExtra = kind === 'moving_platform' ? 0 : run.diff.movingSpeedBonus;
+      vxExtra = kind === 'moving_platform' ? 0 : (kind === 'flying_arrow' ? Math.max(95, run.diff.movingSpeedBonus) : run.diff.movingSpeedBonus);
       if (kind === 'moving_platform') {
-        w = 104; h = 20; y = groundY - 82;
+        w = 108; h = 20; y = groundY - 72;
       }
       // Prevent faster moving obstacle from catching up to previous obstacle before reaching player
       if (lastObs && vxExtra > (lastObs.vxExtra || 0)) {
@@ -595,16 +597,20 @@
       }
     }
 
-    // On Normal & Hard, occasionally spawn a generously spaced Jump -> Slide combo!
+    // On Normal & Hard, occasionally spawn a generously spaced Jump -> Slide combo using world-appropriate obstacles!
     if (!isMoving && Math.random() < run.diff.doubleChance) {
       const comboX = obsX + w + Math.max(330, effSpeed * 0.85);
-      const comboKind = isAir ? 'palace_barrier' : 'hanging_lantern';
       const comboIsAir = !isAir;
+      const worldAir = run.world.obstacles.filter(k => AIR_OBSTACLES.includes(k));
+      const worldGround = run.world.obstacles.filter(k => !AIR_OBSTACLES.includes(k) && !MOVING_OBSTACLES.includes(k));
+      const comboKind = comboIsAir
+        ? (worldAir.length ? worldAir[Math.floor(Math.random() * worldAir.length)] : 'hanging_lantern')
+        : (worldGround.length ? worldGround[Math.floor(Math.random() * worldGround.length)] : 'palace_barrier');
       run.obstacles.push({
         kind: comboKind,
         x: comboX,
         y: comboIsAir ? groundY - 108 : groundY - 52,
-        w: 52,
+        w: 54,
         h: comboIsAir ? 44 : 52,
         vxExtra: 0,
         isAir: comboIsAir,
@@ -1041,10 +1047,10 @@
       run.powerSpawnTimer = 10 + Math.random() * 8;
     }
 
-    // Player Hitbox (difficulty-aware forgiveness & clean slide crouch)
+    // Player Hitbox (difficulty-aware forgiveness & clean slide crouch on ground or platforms)
     const pad = run.diff.hitboxPad || 11;
     const pHit = p.slideTimer > 0
-      ? { x: p.x + 8, y: groundY - 40, w: p.w - 14, h: 38 }
+      ? { x: p.x + 8, y: p.y + p.h - 40, w: p.w - 14, h: 38 }
       : { x: p.x + pad, y: p.y + pad, w: p.w - pad * 2, h: p.h - pad - 4 };
     const pPickup = { x: pHit.x - 12, y: pHit.y - 12, w: pHit.w + 24, h: pHit.h + 24 };
 

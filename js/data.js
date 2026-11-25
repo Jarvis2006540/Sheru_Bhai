@@ -1,0 +1,617 @@
+// ============================================================================
+// SHERU BHAI – ROYAL ENDLESS RUN (INDIA EDITION) | GAME DATA & DEFINITIONS
+// ============================================================================
+
+window.GAME_DATA = (() => {
+  const DIFFICULTIES = {
+    easy: {
+      id: 'easy',
+      label: 'EASY',
+      baseSpeed: 300,
+      maxSpeed: 540,
+      speedAccel: 2.8,
+      spawnMinGap: 1.75,
+      spawnMaxGap: 2.55,
+      minPixelGap: 360,
+      doubleChance: 0.0,
+      movingSpeedBonus: 35,
+      bossSpeedMult: 0.8,
+      hitboxPad: 13,
+      scoreMult: 0.85
+    },
+    normal: {
+      id: 'normal',
+      label: 'NORMAL',
+      baseSpeed: 440,
+      maxSpeed: 840,
+      speedAccel: 6.2,
+      spawnMinGap: 1.05,
+      spawnMaxGap: 1.68,
+      minPixelGap: 285,
+      doubleChance: 0.22,
+      movingSpeedBonus: 75,
+      bossSpeedMult: 1.0,
+      hitboxPad: 11,
+      scoreMult: 1.0
+    },
+    hard: {
+      id: 'hard',
+      label: 'HARD',
+      baseSpeed: 590,
+      maxSpeed: 1180,
+      speedAccel: 10.5,
+      spawnMinGap: 0.68,
+      spawnMaxGap: 1.12,
+      minPixelGap: 245,
+      doubleChance: 0.45,
+      movingSpeedBonus: 135,
+      bossSpeedMult: 1.25,
+      hitboxPad: 9,
+      scoreMult: 1.5
+    }
+  };
+
+  const WORLDS = [
+    {
+      id: 'palace',
+      name: 'Jaipur Royal Palace',
+      subtitle: 'Pink City Havelis & Golden Domes',
+      unlockCost: { coins: 0, gems: 0 },
+      skyTop: '#2b1331',
+      skyBottom: '#f2a679',
+      sunColor: '#ffe08a',
+      farColor: '#7a3b4e',
+      midColor: '#b85d52',
+      groundTop: '#e8c488',
+      groundBody: '#8a5332',
+      accent: '#ffd966',
+      musicTheme: 'palace',
+      obstacles: ['palace_barrier', 'wooden_box', 'hanging_lantern', 'low_banner', 'royal_guard', 'rolling_barrel']
+    },
+    {
+      id: 'city',
+      name: 'Desi Bazaar Street',
+      subtitle: 'Chai Stalls, Auto-Rickshaws & Markets',
+      unlockCost: { coins: 200, gems: 0 },
+      skyTop: '#f8d8d0',
+      skyBottom: '#fbe8e0',
+      sunColor: '#ffb703',
+      farColor: '#d98a73',
+      midColor: '#c45b47',
+      groundTop: '#b85d4b',
+      groundBody: '#4a4e5a',
+      accent: '#ff9f1c',
+      musicTheme: 'city',
+      obstacles: ['moving_vehicle', 'traffic_barricade', 'broken_cart', 'water_puddle', 'flying_bird', 'running_bull']
+    },
+    {
+      id: 'desert',
+      name: 'Thar Desert Kingdom',
+      subtitle: 'Jaisalmer Dunes & Ancient Temples',
+      unlockCost: { coins: 500, gems: 5 },
+      skyTop: '#4a1d1f',
+      skyBottom: '#f4a261',
+      sunColor: '#fff1a8',
+      farColor: '#9e5a3b',
+      midColor: '#c97b42',
+      groundTop: '#e9c46a',
+      groundBody: '#b57c3c',
+      accent: '#f4a261',
+      musicTheme: 'desert',
+      hasSandstorm: true,
+      obstacles: ['giant_rock', 'cactus', 'rolling_stone', 'flying_arrow', 'wild_boar', 'burning_barrel']
+    },
+    {
+      id: 'jungle',
+      name: 'Sundarbans Jungle',
+      subtitle: 'Banyan Canopy & Temple Ruins',
+      unlockCost: { coins: 850, gems: 10 },
+      skyTop: '#0b2b26',
+      skyBottom: '#2d6a4f',
+      sunColor: '#d8f3dc',
+      farColor: '#1b4332',
+      midColor: '#2d6a4f',
+      groundTop: '#52b788',
+      groundBody: '#3d2b1f',
+      accent: '#74c69d',
+      musicTheme: 'jungle',
+      obstacles: ['fallen_tree', 'spikes', 'water_puddle', 'flying_bird', 'wild_boar', 'moving_platform']
+    },
+    {
+      id: 'fortress',
+      name: 'Chittorgarh Fortress',
+      subtitle: 'Ancient Stone Gates & Mashal Fire',
+      unlockCost: { coins: 1300, gems: 18 },
+      skyTop: '#180c1e',
+      skyBottom: '#7a1c2e',
+      sunColor: '#ff8fa3',
+      farColor: '#311a33',
+      midColor: '#4c2b48',
+      groundTop: '#8d7b74',
+      groundBody: '#3a3033',
+      accent: '#ff4d6d',
+      musicTheme: 'fortress',
+      obstacles: ['burning_barrel', 'spikes', 'swinging_chain', 'flying_arrow', 'royal_guard', 'rolling_stone']
+    },
+    {
+      id: 'future',
+      name: 'Neo-Bharat 2099',
+      subtitle: 'Cyber Lotus Towers & Neon Bazaars',
+      unlockCost: { coins: 2000, gems: 28 },
+      skyTop: '#050816',
+      skyBottom: '#1c1147',
+      sunColor: '#00f5d4',
+      farColor: '#12183b',
+      midColor: '#1f285e',
+      groundTop: '#242b52',
+      groundBody: '#0d1126',
+      accent: '#00f5d4',
+      musicTheme: 'future',
+      obstacles: ['laser_barrier', 'flying_drone', 'moving_vehicle', 'spikes', 'swinging_chain', 'rolling_barrel']
+    },
+    {
+      id: 'chennai',
+      name: 'Chennai Marina & Mylapore',
+      subtitle: 'Gopuram Temples, Marina Coast & Filter Coffee',
+      unlockCost: { coins: 400, gems: 2 },
+      skyTop: '#0f2942',
+      skyBottom: '#f4a261',
+      sunColor: '#ffd166',
+      farColor: '#264653',
+      midColor: '#b56576',
+      groundTop: '#e9c46a',
+      groundBody: '#3d405b',
+      accent: '#ffd166',
+      musicTheme: 'city',
+      obstacles: ['moving_vehicle', 'traffic_barricade', 'broken_cart', 'water_puddle', 'flying_bird', 'hanging_lantern']
+    },
+    {
+      id: 'coimbatore',
+      name: 'Coimbatore & Nilgiris',
+      subtitle: 'Misty Western Ghats, Tea Hills & Kovai Arches',
+      unlockCost: { coins: 650, gems: 4 },
+      skyTop: '#13312a',
+      skyBottom: '#6ab07c',
+      sunColor: '#fefae0',
+      farColor: '#1b4332',
+      midColor: '#2d6a4f',
+      groundTop: '#74c69d',
+      groundBody: '#3d2b1f',
+      accent: '#b7e4c7',
+      musicTheme: 'jungle',
+      obstacles: ['fallen_tree', 'giant_rock', 'rolling_stone', 'flying_bird', 'wild_boar', 'moving_platform']
+    },
+    {
+      id: 'bengaluru',
+      name: 'Bengaluru Garden & Tech City',
+      subtitle: 'Vidhana Soudha Pillars, Cubbon Palms & Metro',
+      unlockCost: { coins: 950, gems: 8 },
+      skyTop: '#1a1f3c',
+      skyBottom: '#6959a8',
+      sunColor: '#ffd6a5',
+      farColor: '#2d325a',
+      midColor: '#485696',
+      groundTop: '#7f8fa6',
+      groundBody: '#2f3640',
+      accent: '#a29bfe',
+      musicTheme: 'future',
+      obstacles: ['moving_vehicle', 'flying_drone', 'laser_barrier', 'traffic_barricade', 'hanging_lantern', 'spikes']
+    },
+    {
+      id: 'hyderabad',
+      name: 'Hyderabad Charminar City',
+      subtitle: 'Four Minarets, Pearl Bazaars & Royal Arches',
+      unlockCost: { coins: 1250, gems: 12 },
+      skyTop: '#231942',
+      skyBottom: '#be95c4',
+      sunColor: '#ffe5b4',
+      farColor: '#4a306d',
+      midColor: '#7a5195',
+      groundTop: '#e0c097',
+      groundBody: '#5c4d3c',
+      accent: '#f7b267',
+      musicTheme: 'palace',
+      obstacles: ['palace_barrier', 'moving_vehicle', 'broken_cart', 'low_banner', 'royal_guard', 'burning_barrel']
+    },
+    {
+      id: 'kochi',
+      name: 'Kochi Kerala Backwaters',
+      subtitle: 'Coconut Palms, Houseboats & Fishing Nets',
+      unlockCost: { coins: 1600, gems: 16 },
+      skyTop: '#0b3954',
+      skyBottom: '#56cfe1',
+      sunColor: '#fff3b0',
+      farColor: '#115e59',
+      midColor: '#0f766e',
+      groundTop: '#d4a373',
+      groundBody: '#4a3219',
+      accent: '#64dfdf',
+      musicTheme: 'jungle',
+      obstacles: ['water_puddle', 'wooden_box', 'fallen_tree', 'swinging_chain', 'flying_bird', 'moving_platform']
+    }
+  ];
+
+  const SKINS = [
+    {
+      id: 'classic',
+      name: 'Classic White Sheru',
+      desc: 'Signature cream-white 3-piece suit, gold chain & brown loafers.',
+      cost: { coins: 0, gems: 0 },
+      fur: '#f9f6ef',
+      mane: '#f2eadb',
+      suit: '#f3ebd8',
+      vest: '#e5dac1',
+      shirt: '#ffffff',
+      tieOrChain: '#ffd700',
+      shoes: '#5a3219',
+      sunglasses: false,
+      crown: false,
+      glow: null
+    },
+    {
+      id: 'black_suit',
+      name: 'Black Suit Sheru',
+      desc: 'Midnight tailored bandhgala tuxedo with gleaming gold chain.',
+      cost: { coins: 300, gems: 0 },
+      fur: '#f9f6ef',
+      mane: '#f2eadb',
+      suit: '#1c1d24',
+      vest: '#2c2e38',
+      shirt: '#f8f9fa',
+      tieOrChain: '#ffd700',
+      shoes: '#111111',
+      sunglasses: true,
+      crown: false,
+      glow: null
+    },
+    {
+      id: 'golden_king',
+      name: 'Golden King Sheru',
+      desc: 'Royal champagne-gold 3-piece suit with a regal Rajmukut crown.',
+      cost: { coins: 650, gems: 5 },
+      fur: '#fffaf0',
+      mane: '#f7ebd2',
+      suit: '#d4af37',
+      vest: '#b8860b',
+      shirt: '#fffdf5',
+      tieOrChain: '#fff3b0',
+      shoes: '#4a2810',
+      sunglasses: false,
+      crown: true,
+      glow: 'rgba(255, 215, 0, 0.35)'
+    },
+    {
+      id: 'royal_red',
+      name: 'Royal Red Sheru',
+      desc: 'Rajasthani crimson velvet blazer with zari gold embroidery.',
+      cost: { coins: 900, gems: 8 },
+      fur: '#f9f6ef',
+      mane: '#f2eadb',
+      suit: '#8b1e2b',
+      vest: '#64121d',
+      shirt: '#fff8f0',
+      tieOrChain: '#ffd166',
+      shoes: '#3b1c0e',
+      sunglasses: false,
+      crown: false,
+      glow: 'rgba(220, 38, 38, 0.25)'
+    },
+    {
+      id: 'desert_warrior',
+      name: 'Desert Warrior Sheru',
+      desc: 'Jaisalmer sandstone-tan royal coat built for the Thar dunes.',
+      cost: { coins: 1200, gems: 12 },
+      fur: '#f9f6ef',
+      mane: '#ede2cd',
+      suit: '#c89b62',
+      vest: '#9e723d',
+      shirt: '#faf0dc',
+      tieOrChain: '#ffb703',
+      shoes: '#4f2c14',
+      sunglasses: true,
+      crown: false,
+      glow: null
+    },
+    {
+      id: 'cyber',
+      name: 'Cyber Sheru',
+      desc: 'Neo-Bharat holographic suit with cyan neon trim.',
+      cost: { coins: 1800, gems: 18 },
+      fur: '#f4f8ff',
+      mane: '#e2ecff',
+      suit: '#121a3a',
+      vest: '#1e2c63',
+      shirt: '#dff9ff',
+      tieOrChain: '#00f5d4',
+      shoes: '#0b1024',
+      sunglasses: true,
+      crown: false,
+      glow: 'rgba(0, 245, 212, 0.4)'
+    },
+    {
+      id: 'maharaja',
+      name: 'Maharaja Sheru',
+      desc: 'Royal purple & gold Jodhpuri Maharaja suit with crown.',
+      cost: { coins: 2500, gems: 25 },
+      fur: '#fffdf8',
+      mane: '#f5ebd6',
+      suit: '#4b1d6b',
+      vest: '#d4af37',
+      shirt: '#fffaf0',
+      tieOrChain: '#ffd700',
+      shoes: '#522914',
+      sunglasses: false,
+      crown: true,
+      glow: 'rgba(168, 85, 247, 0.35)'
+    },
+    {
+      id: 'legendary',
+      name: 'Legendary Golden Sheru',
+      desc: 'Radiant mythic aura, pure gold suit & Emperor crown.',
+      cost: { coins: 4000, gems: 45 },
+      fur: '#ffffff',
+      mane: '#fff4cc',
+      suit: '#ffd700',
+      vest: '#f59e0b',
+      shirt: '#ffffff',
+      tieOrChain: '#ffffff',
+      shoes: '#6b3a17',
+      sunglasses: true,
+      crown: true,
+      glow: 'rgba(255, 223, 77, 0.55)'
+    }
+  ];
+
+  const POWERUPS = {
+    shield: { id: 'shield', name: 'Royal Kavach', icon: '🛡️', duration: 15, color: '#38bdf8', desc: 'Blocks 1 obstacle collision' },
+    magnet: { id: 'magnet', name: 'Gold Magnet', icon: '🧲', duration: 10, color: '#f43f5e', desc: 'Attracts nearby Asharfi coins' },
+    speed: { id: 'speed', name: 'Garuda Speed', icon: '⚡', duration: 7, color: '#facc15', desc: 'Boosts speed & score x2' },
+    doubleCoin: { id: 'doubleCoin', name: 'Double Asharfi', icon: '🪙', duration: 12, color: '#fbbf24', desc: 'Doubles all collected coins' },
+    flight: { id: 'flight', name: 'Royal Flight', icon: '🦅', duration: 8, color: '#a855f7', desc: 'Soar above ground obstacles' },
+    invincibility: { id: 'invincibility', name: 'Maharaja Aura', icon: '👑', duration: 7, color: '#fde047', desc: 'Smash through obstacles!' },
+    megaJump: { id: 'megaJump', name: 'Hanuman Leap', icon: '🚀', duration: 12, color: '#34d399', desc: 'Extra-high royal leaps' },
+    freeze: { id: 'freeze', name: 'Time Freeze', icon: '❄️', duration: 8, color: '#67e8f9', desc: 'Slows down obstacles' }
+  };
+
+  const BOSSES = [
+    {
+      id: 'boss1',
+      name: 'THE ROYAL SIPAHI',
+      triggerDist: 450,
+      hp: 6,
+      stages: 1,
+      color: '#c1121f',
+      accent: '#ffd700',
+      attackTypes: ['barrier', 'low_spear']
+    },
+    {
+      id: 'boss2',
+      name: 'THAR DESERT BEAST',
+      triggerDist: 1050,
+      hp: 8,
+      stages: 1,
+      color: '#bc6c25',
+      accent: '#dda15e',
+      attackTypes: ['rolling_rock', 'sandstorm']
+    },
+    {
+      id: 'boss3',
+      name: 'JUNGLE VANRAJ',
+      triggerDist: 1750,
+      hp: 10,
+      stages: 2,
+      color: '#2d6a4f',
+      accent: '#95d5b2',
+      attackTypes: ['branch', 'falling_log']
+    },
+    {
+      id: 'boss4',
+      name: 'LOHA ASURA',
+      triggerDist: 2500,
+      hp: 12,
+      stages: 2,
+      color: '#495057',
+      accent: '#00f5d4',
+      attackTypes: ['laser', 'drone_wave']
+    },
+    {
+      id: 'boss5',
+      name: 'THE DARK LION',
+      triggerDist: 3400,
+      hp: 18,
+      stages: 3,
+      color: '#111118',
+      accent: '#ffd700',
+      attackTypes: ['dark_slash', 'barrier', 'laser', 'meteor']
+    }
+  ];
+
+  const ACHIEVEMENTS = [
+    { id: 'first_run', name: 'First Run', desc: 'Complete your very first run as Sheru Bhai.', rewardCrowns: 1 },
+    { id: 'coin_collector', name: 'Asharfi Collector', desc: 'Collect 500 total gold coins.', rewardCrowns: 2 },
+    { id: 'royal_jumper', name: 'Royal Jumper', desc: 'Jump over 100 obstacles.', rewardCrowns: 2 },
+    { id: 'master_dodger', name: 'Master Dodger', desc: 'Avoid 200 obstacles.', rewardCrowns: 3 },
+    { id: 'speed_king', name: 'Raja of Speed', desc: 'Reach a score of 5,000 in a single run.', rewardCrowns: 3 },
+    { id: 'gem_hunter', name: 'Ratna Hunter', desc: 'Collect 25 Royal Gems.', rewardCrowns: 3 },
+    { id: 'mission_master', name: 'Mission Master', desc: 'Complete 25 Royal Missions.', rewardCrowns: 4 },
+    { id: 'boss_slayer', name: 'Boss Slayer', desc: 'Defeat any Royal Boss.', rewardCrowns: 5 },
+    { id: 'royal_champion', name: 'Bharat Conqueror', desc: 'Unlock 4 different Indian Kingdoms.', rewardCrowns: 5 },
+    { id: 'legendary_sheru', name: 'Legendary Sheru', desc: 'Defeat The Dark Lion (Final Boss).', rewardCrowns: 10 }
+  ];
+
+  const CHAPTER_TITLES = [
+    'THE ROYAL BEGINNING',
+    'BAZAAR LEGEND',
+    'THAR DESERT KING',
+    'JUNGLE SURVIVOR',
+    'FORTRESS WARRIOR',
+    'ROYAL CHAMPION',
+    'SPEED LEGEND',
+    'KING OF THE KINGDOM',
+    'LEGENDARY SHERU',
+    'THE ULTIMATE MAHARAJA',
+    'SOUTH INDIA EXPRESS',
+    'BHARAT EMPEROR'
+  ];
+
+  const m = (id, ch, title, desc, type, target, rewardCoins, rewardGems, extra = null) => ({
+    id, chapter: ch, title, desc, type, target, rewardCoins, rewardGems, extra
+  });
+
+  const MISSIONS = [
+    // Chapter 1 – THE ROYAL BEGINNING (All missions ~1+ minute)
+    m(1, 1, 'First Royal Minute', 'Survive 60 seconds in a run.', 'survive_time', 60, 100, 1),
+    m(2, 1, 'Royal Stroll', 'Run 1,200 meters.', 'distance_total', 1200, 110, 1),
+    m(3, 1, 'Pocket Gold', 'Collect 80 gold coins.', 'coins_total', 80, 110, 1),
+    m(4, 1, 'Lion Leap', 'Jump over 25 obstacles.', 'jump_obstacles', 25, 120, 1),
+    m(5, 1, 'Steady Pace', 'Survive 75 seconds in a run.', 'survive_time', 75, 130, 1),
+    m(6, 1, 'Coin Pouch', 'Collect 150 coins.', 'coins_total', 150, 140, 1),
+    m(7, 1, 'Low Profile', 'Slide under 15 barriers.', 'slide_obstacles', 15, 140, 1),
+    m(8, 1, 'Palace Sprinter', 'Run 2,500 meters.', 'distance_total', 2500, 150, 2),
+    m(9, 1, 'Sharp Reflex', 'Avoid 40 obstacles.', 'avoid_obstacles', 40, 160, 2),
+    m(10, 1, 'Chapter 1 Crown', 'Complete the first chapter.', 'complete_chapter', 1, 250, 3),
+
+    // Chapter 2 – BAZAAR LEGEND
+    m(11, 2, 'Street Runner', 'Run 3,800 meters.', 'distance_total', 3800, 170, 2),
+    m(12, 2, 'Market Wealth', 'Collect 250 coins.', 'coins_total', 250, 180, 2),
+    m(13, 2, 'Traffic Hopper', 'Jump over 45 obstacles.', 'jump_obstacles', 45, 180, 2),
+    m(14, 2, 'Smooth Slider', 'Slide under 25 obstacles.', 'slide_obstacles', 25, 190, 2),
+    m(15, 2, 'Untouchable', 'Survive without collision for 65 seconds.', 'no_hit_time', 65, 210, 2),
+    m(16, 2, 'Line Sweeper', 'Collect 10 coin lines.', 'coin_lines', 10, 200, 2),
+    m(17, 2, 'City High Score', 'Reach a score of 10,000.', 'score_run', 10000, 220, 2),
+    m(18, 2, 'Shielded King', 'Use 3 Royal Kavach (Shields).', 'use_powerup_type', 3, 200, 2, 'shield'),
+    m(19, 2, 'Gold Attraction', 'Use 3 Gold Magnets.', 'use_powerup_type', 3, 200, 2, 'magnet'),
+    m(20, 2, 'Chapter 2 Crown', 'Complete the chapter.', 'complete_chapter', 2, 300, 4),
+
+    // Chapter 3 – THAR DESERT KING
+    m(21, 3, 'Dune Strider', 'Run 5,500 meters.', 'distance_total', 5500, 220, 2),
+    m(22, 3, 'Sand Treasure', 'Collect 400 coins.', 'coins_total', 400, 230, 2),
+    m(23, 3, 'Mirage Dodge', 'Dodge 80 obstacles.', 'avoid_obstacles', 80, 230, 2),
+    m(24, 3, 'Cactus Vaulter', 'Jump over 65 obstacles.', 'jump_obstacles', 65, 240, 2),
+    m(25, 3, 'Lightning Fur', 'Use Garuda Speed 3 times.', 'use_powerup_type', 3, 240, 3, 'speed'),
+    m(26, 3, 'Gem Seeker', 'Collect 10 gems.', 'gems_total', 10, 250, 3),
+    m(27, 3, 'Desert Glory', 'Reach a score of 14,000.', 'score_run', 14000, 260, 3),
+    m(28, 3, 'Storm Survivor', 'Survive 2 sandstorms.', 'survive_sandstorm', 2, 270, 3),
+    m(29, 3, 'Endurance Test', 'Complete a 90-second run.', 'survive_time', 90, 280, 3),
+    m(30, 3, 'Chapter 3 Crown', 'Complete the chapter.', 'complete_chapter', 3, 350, 5),
+
+    // Chapter 4 – JUNGLE SURVIVOR
+    m(31, 4, 'Canopy Dash', 'Run 7,500 meters.', 'distance_total', 7500, 260, 3),
+    m(32, 4, 'Jungle Bounty', 'Collect 550 coins.', 'coins_total', 550, 270, 3),
+    m(33, 4, 'Wild Evasion', 'Avoid 45 moving obstacles.', 'avoid_moving', 45, 280, 3),
+    m(34, 4, 'Vine Jumper', 'Jump over 90 obstacles.', 'jump_obstacles', 90, 280, 3),
+    m(35, 4, 'Branch Slider', 'Slide under 40 obstacles.', 'slide_obstacles', 40, 290, 3),
+    m(36, 4, 'Sky Lion', 'Use Royal Flight 3 times.', 'use_powerup_type', 3, 290, 3, 'flight'),
+    m(37, 4, 'Emerald Collector', 'Collect 18 gems.', 'gems_total', 18, 300, 4),
+    m(38, 4, 'Two Minute King', 'Survive 120 seconds (2 minutes).', 'survive_time', 120, 320, 4),
+    m(39, 4, 'Jungle Apex', 'Reach a score of 18,000.', 'score_run', 18000, 340, 4),
+    m(40, 4, 'Chapter 4 Crown', 'Complete the chapter.', 'complete_chapter', 4, 420, 6),
+
+    // Chapter 5 – FORTRESS WARRIOR
+    m(41, 5, 'Fortress March', 'Run 9,500 meters.', 'distance_total', 9500, 310, 3),
+    m(42, 5, 'Vault Raider', 'Collect 750 coins.', 'coins_total', 750, 320, 3),
+    m(43, 5, 'Iron Reflex', 'Dodge 130 obstacles.', 'avoid_obstacles', 130, 320, 3),
+    m(44, 5, 'Powered Up', 'Use 12 power-ups.', 'use_powerups_total', 12, 330, 4),
+    m(45, 5, 'Persistent King', 'Complete 6 runs.', 'runs', 6, 330, 4),
+    m(46, 5, 'Fortress Jewels', 'Collect 25 gems.', 'gems_total', 25, 340, 4),
+    m(47, 5, 'Warrior Score', 'Reach a score of 22,000.', 'score_run', 22000, 360, 4),
+    m(48, 5, 'Fire Endurance', 'Survive 150 seconds.', 'survive_time', 150, 370, 5),
+    m(49, 5, 'Flawless Run', 'Avoid 50 obstacles in one run.', 'avoid_run', 50, 380, 5),
+    m(50, 5, 'Chapter 5 Crown', 'Complete the chapter.', 'complete_chapter', 5, 480, 7),
+
+    // Chapter 6 – ROYAL CHAMPION
+    m(51, 6, 'Champion Mile', 'Run 12,000 meters.', 'distance_total', 12000, 360, 4),
+    m(52, 6, 'Royal Treasury', 'Collect 950 coins.', 'coins_total', 950, 370, 4),
+    m(53, 6, 'Skybound Paws', 'Jump over 120 obstacles.', 'jump_obstacles', 120, 370, 4),
+    m(54, 6, 'Shadow Slide', 'Slide under 60 obstacles.', 'slide_obstacles', 60, 380, 4),
+    m(55, 6, 'God Mode', 'Activate Maharaja Aura 3 times.', 'use_powerup_type', 3, 390, 5, 'invincibility'),
+    m(56, 6, 'Sapphire Hoard', 'Collect 32 gems.', 'gems_total', 32, 400, 5),
+    m(57, 6, 'Champion Score', 'Reach a score of 25,000.', 'score_run', 25000, 420, 5),
+    m(58, 6, 'Pure Skill', 'Complete a 60s+ run without using a shield.', 'no_shield_run', 1, 420, 5),
+    m(59, 6, 'Three Minute Rule', 'Survive 180 seconds (3 minutes).', 'survive_time', 180, 440, 6),
+    m(60, 6, 'Chapter 6 Crown', 'Complete the chapter.', 'complete_chapter', 6, 540, 8),
+
+    // Chapter 7 – SPEED LEGEND
+    m(61, 7, 'Supersonic Fur', 'Run 15,000 meters.', 'distance_total', 15000, 420, 5),
+    m(62, 7, 'Golden Avalanche', 'Collect 1,200 coins.', 'coins_total', 1200, 430, 5),
+    m(63, 7, 'Thirty Grand', 'Reach a score of 30,000.', 'score_run', 30000, 450, 5),
+    m(64, 7, 'Blur Dodge', 'Avoid 200 obstacles.', 'avoid_obstacles', 200, 450, 5),
+    m(65, 7, 'Frozen Time', 'Use Time Freeze 3 times.', 'use_powerup_type', 3, 460, 6, 'freeze'),
+    m(66, 7, 'Diamond Crown', 'Collect 40 gems.', 'gems_total', 40, 470, 6),
+    m(67, 7, 'Dedicated Runner', 'Complete 10 runs.', 'runs', 10, 480, 6),
+    m(68, 7, 'Max Velocity', 'Survive at maximum speed for 60 seconds.', 'max_speed_time', 60, 500, 7),
+    m(69, 7, 'Single Run Rich', 'Collect 100 coins in one run.', 'coins_run', 100, 520, 7),
+    m(70, 7, 'Chapter 7 Crown', 'Complete the chapter.', 'complete_chapter', 7, 620, 9),
+
+    // Chapter 8 – KING OF THE KINGDOM
+    m(71, 8, 'Grand Tour', 'Run 18,000 meters.', 'distance_total', 18000, 480, 6),
+    m(72, 8, 'King’s Mint', 'Collect 1,500 coins.', 'coins_total', 1500, 500, 6),
+    m(73, 8, 'Royal Prestige', 'Reach a score of 35,000.', 'score_run', 35000, 520, 6),
+    m(74, 8, 'Acrobat Lion', 'Jump over 160 obstacles.', 'jump_obstacles', 160, 520, 6),
+    m(75, 8, 'Century Dodge', 'Avoid 260 obstacles.', 'avoid_obstacles', 260, 540, 7),
+    m(76, 8, 'Power Collector', 'Use 5 different power-ups.', 'unique_powerups', 5, 550, 7),
+    m(77, 8, 'Gem Vault', 'Collect 48 gems.', 'gems_total', 48, 560, 7),
+    m(78, 8, 'Four Minute Reign', 'Survive 240 seconds (4 minutes).', 'survive_time', 240, 580, 8),
+    m(79, 8, 'Clean Streak', 'Survive without collision for 120 seconds.', 'no_hit_time', 120, 600, 8),
+    m(80, 8, 'Chapter 8 Crown', 'Complete the chapter.', 'complete_chapter', 8, 700, 10),
+
+    // Chapter 9 – LEGENDARY SHERU
+    m(81, 9, 'Mythic Stride', 'Run 22,000 meters.', 'distance_total', 22000, 580, 7),
+    m(82, 9, 'Emperor’s Gold', 'Collect 1,800 coins.', 'coins_total', 1800, 600, 7),
+    m(83, 9, 'Forty Grand', 'Reach a score of 40,000.', 'score_run', 40000, 620, 8),
+    m(84, 9, 'Phantom Dodge', 'Avoid 320 obstacles.', 'avoid_obstacles', 320, 640, 8),
+    m(85, 9, 'Crystal Emperor', 'Collect 56 gems.', 'gems_total', 56, 660, 8),
+    m(86, 9, 'Veteran King', 'Complete 15 runs.', 'runs', 15, 660, 8),
+    m(87, 9, 'Five Minute Legend', 'Survive 300 seconds (5 minutes).', 'survive_time', 300, 680, 9),
+    m(88, 9, 'Golden Tsunami', 'Collect 150 coins in one run.', 'coins_run', 150, 700, 9),
+    m(89, 9, 'Master of All Powers', 'Use all 8 power-up types.', 'unique_powerups', 8, 750, 10),
+    m(90, 9, 'Chapter 9 Crown', 'Complete the chapter.', 'complete_chapter', 9, 850, 12),
+
+    // Chapter 10 – THE ULTIMATE MAHARAJA
+    m(91, 10, 'Royal Marathon', 'Run 26,000 meters.', 'distance_total', 26000, 700, 10),
+    m(92, 10, 'Royal Billionaire', 'Collect 2,200 coins.', 'coins_total', 2200, 750, 10),
+    m(93, 10, 'Fifty Grand', 'Reach a score of 50,000.', 'score_run', 50000, 800, 10),
+    m(94, 10, 'Untouchable Legend', 'Avoid 400 obstacles.', 'avoid_obstacles', 400, 820, 10),
+    m(95, 10, 'Gem Sovereign', 'Collect 65 gems.', 'gems_total', 65, 850, 12),
+    m(96, 10, 'Six Minute Immortal', 'Survive 360 seconds (6 minutes).', 'survive_time', 360, 900, 12),
+    m(97, 10, 'Three Minute Perfection', 'Survive without collision for 180 seconds.', 'no_hit_time', 180, 950, 14),
+    m(98, 10, 'Slayer of Darkness', 'Defeat 2 Royal Bosses.', 'defeat_boss', 2, 1000, 15),
+    m(99, 10, 'Bharat Conqueror', 'Unlock 6 environments.', 'unlock_all_worlds', 6, 1050, 15),
+    m(100, 10, 'ULTIMATE ROYAL LEGEND', 'Complete the ultimate Royal Legend challenge.', 'complete_chapter', 10, 1600, 25),
+
+    // Chapter 11 – SOUTH INDIA EXPRESS (All ~1+ minute in each city)
+    m(101, 11, 'Marina Beach Dash', 'Run 1,200m in Chennai Marina & Mylapore.', 'world_distance', 1200, 320, 4, 'chennai'),
+    m(102, 11, 'Kovai Hill Runner', 'Run 1,200m in Coimbatore & Nilgiris.', 'world_distance', 1200, 350, 4, 'coimbatore'),
+    m(103, 11, 'Garden City Sprint', 'Run 1,400m in Bengaluru Garden & Tech City.', 'world_distance', 1400, 380, 5, 'bengaluru'),
+    m(104, 11, 'Charminar Stride', 'Run 1,400m in Hyderabad Charminar City.', 'world_distance', 1400, 420, 5, 'hyderabad'),
+    m(105, 11, 'Backwater Explorer', 'Run 1,500m in Kochi Kerala Backwaters.', 'world_distance', 1500, 450, 6, 'kochi'),
+    m(106, 11, 'South Bazaar Gold', 'Collect 2,600 total coins.', 'coins_total', 2600, 500, 6),
+    m(107, 11, 'Filter Coffee Reflex', 'Jump over 220 obstacles.', 'jump_obstacles', 220, 520, 6),
+    m(108, 11, 'Nilgiri Acrobat', 'Slide under 100 obstacles.', 'slide_obstacles', 100, 550, 7),
+    m(109, 11, 'Deccan High Score', 'Reach a score of 55,000.', 'score_run', 55000, 650, 8),
+    m(110, 11, 'South India Crown', 'Complete the South India Express chapter.', 'complete_chapter', 11, 900, 12),
+
+    // Chapter 12 – BHARAT EMPEROR
+    m(111, 12, 'Pan-India Marathon', 'Run 35,000 total meters.', 'distance_total', 35000, 750, 8),
+    m(112, 12, 'Emperor Treasury', 'Collect 3,200 total coins.', 'coins_total', 3200, 800, 9),
+    m(113, 12, 'Grand Ratna Vault', 'Collect 90 Royal Gems.', 'gems_total', 90, 850, 10),
+    m(114, 12, 'Shadow Dodger', 'Avoid 500 obstacles.', 'avoid_obstacles', 500, 880, 10),
+    m(115, 12, 'Royal Veteran', 'Complete 25 runs.', 'runs', 25, 900, 10),
+    m(116, 12, 'Boss Vanquisher', 'Defeat 4 Royal Bosses.', 'defeat_boss', 4, 1000, 12),
+    m(117, 12, 'Sixty Grand Legend', 'Reach a score of 60,000.', 'score_run', 60000, 1050, 14),
+    m(118, 12, 'Unbroken Spirit', 'Survive without collision for 240 seconds.', 'no_hit_time', 240, 1100, 15),
+    m(119, 12, 'All 11 Kingdoms', 'Unlock all 11 Indian Kingdoms.', 'unlock_all_worlds', 11, 1300, 18),
+    m(120, 12, 'EMPEROR OF BHARAT', 'Complete the ultimate Bharat Emperor chapter.', 'complete_chapter', 12, 2200, 30)
+  ];
+
+  return {
+    DIFFICULTIES,
+    WORLDS,
+    SKINS,
+    POWERUPS,
+    BOSSES,
+    ACHIEVEMENTS,
+    CHAPTER_TITLES,
+    MISSIONS
+  };
+})();

@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>SHERU BHAI – ROYAL ENDLESS RUN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Main Game Canvas -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Toast Notifications (Missions, Achievements, Boss Warnings, Near Miss) -->
+    <div id="toastContainer" aria-live="polite"></div>
+
+    <!-- ==================== GAMEPLAY HUD ==================== -->
+    <div id="gameplayHud" class="hud hidden">
+      <div class="hud-top">
+        <div class="hud-left">
+          <div class="hud-stat score-pill">
+            <span class="hud-label">SCORE</span>
+            <span id="hudScore" class="hud-value">0</span>
+            <span id="hudMultiplier" class="multiplier-badge">x1</span>
+          </div>
+          <div class="hud-stat">
+            <span class="hud-label">DIST</span>
+            <span id="hudDistance" class="hud-value">0m</span>
+          </div>
+          <div class="hud-stat world-pill">
+            <span id="hudWorldName" class="hud-world">Jaipur Royal Palace</span>
+            <span id="hudDiffBadge" class="multiplier-badge">NORMAL</span>
+          </div>
+        </div>
+
+        <div class="hud-center">
+          <div id="bossHud" class="boss-hud hidden">
+            <div class="boss-hud-header">
+              <span id="bossName">THE ROYAL GUARD</span>
+              <span id="bossStageLabel">STAGE 1</span>
+            </div>
+            <div class="boss-hp-bar">
+              <div id="bossHpFill" class="boss-hp-fill"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hud-right">
+          <div class="currency-pill coin-pill">
+            <span class="icon-coin">●</span>
+            <span id="hudCoins">0</span>
+          </div>
+          <div class="currency-pill gem-pill">
+            <span class="icon-gem">◆</span>
+            <span id="hudGems">0</span>
+          </div>
+          <button id="btnMuteHud" class="hud-icon-btn" title="Mute / Unmute Audio" aria-label="Toggle Audio">
+            <span>🔊</span>
+          </button>
+          <button id="btnPause" class="hud-icon-btn" title="Pause (ESC)" aria-label="Pause Game">
+            <span>❚❚</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Active Mission & Power-up Timers -->
+      <div class="hud-sub-row">
+        <div id="hudMissionPill" class="hud-mission-pill">
+          <span class="mission-pill-tag">ACTIVE MISSION</span>
+          <span id="hudMissionText">Loading...</span>
+        </div>
+        <div id="hudMusicPill" class="hud-music-pill">
+          <span class="music-note">🎵</span>
+          <span id="hudTrackInfo">SHERU BHAI – Official Song • DreamyAuraTunes</span>
+          <button id="btnNextTrackHud" class="music-next-btn" title="Next Track" aria-label="Next Music Track">⏭</button>
+        </div>
+        <div id="activePowerups" class="active-powerups"></div>
+      </div>
+
+      <!-- Subtle First-Seconds Control Guide -->
+      <div id="runTutorialHint" class="run-tutorial hidden">
+        SPACE / TAP: JUMP &amp; DOUBLE JUMP &nbsp;•&nbsp; S / SWIPE DOWN: SLIDE &nbsp;•&nbsp; SHIFT / ⚡: ROYAL STRIKE
+      </div>
+
+      <!-- Mobile Touch Controls -->
+      <div id="mobileControls" class="mobile-controls">
+        <div class="mobile-touch-left">
+          <button id="btnSlideMobile" class="touch-action-btn" aria-label="Slide">
+            <span>▼</span>
+            <small>SLIDE</small>
+          </button>
+          <div class="mobile-hint">TAP / SWIPE UP: JUMP • SWIPE DOWN: SLIDE</div>
+        </div>
+        <div class="mobile-touch-right">
+          <button id="btnSpecialMobile" class="special-btn hidden" aria-label="Activate Special Power">
+            <span class="special-icon">⚡</span>
+            <span class="special-text">POWER</span>
+          </button>
+          <button id="btnJumpMobile" class="touch-action-btn jump-btn" aria-label="Jump">
+            <span>▲</span>
+            <small>JUMP</small>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== MAIN MENU ==================== -->
+    <div id="mainMenu" class="screen-overlay active">
+      <div class="menu-container">
+        <div class="menu-top-bar">
+          <div class="brand-badge">👑 ROYAL INDIA EDITION</div>
+          <div class="wallet-bar">
+            <div class="wallet-item"><span class="icon-coin">●</span> <span id="menuCoins">0</span></div>
+            <div class="wallet-item"><span class="icon-gem">◆</span> <span id="menuGems">0</span></div>
+            <div class="wallet-item"><span class="icon-crown">♛</span> <span id="menuCrowns">0</span></div>
+          </div>
+        </div>
+
+        <div class="menu-hero">
+          <div class="hero-showcase">
+            <canvas id="menuPreviewCanvas" width="320" height="360"></canvas>
+            <div class="hero-pedestal"></div>
+            <div id="menuSkinLabel" class="skin-tag">Classic White Sheru</div>
+          </div>
+
+          <div class="hero-content">
+            <h1 class="game-title">SHERU BHAI</h1>
+            <p class="game-subtitle">ROYAL ENDLESS RUN</p>
+
+            <div class="best-score-banner">
+              <div>
+                <span class="best-label">BEST SCORE</span>
+                <span id="menuBestScore" class="best-val">0</span>
+              </div>
+              <div class="divider-v"></div>
+              <div>
+                <span class="best-label">CURRENT WORLD</span>
+                <span id="menuCurrentWorld" class="best-val">Jaipur Royal Palace</span>
+              </div>
+            </div>
+
+            <div class="difficulty-selector">
+              <span class="diff-label">MODE:</span>
+              <button class="mode-btn active" data-mode="mission">🎯 MISSIONS</button>
+              <button class="mode-btn" data-mode="endless">∞ ENDLESS</button>
+            </div>
+
+            <div class="difficulty-selector">
+              <span class="diff-label">DIFFICULTY:</span>
+              <button class="diff-btn" data-diff="easy">EASY</button>
+              <button class="diff-btn active" data-diff="normal">NORMAL</button>
+              <button class="diff-btn" data-diff="hard">HARD</button>
+            </div>
+
+            <button id="btnPlay" class="btn-primary-royal">
+              <span class="btn-shine"></span>
+              ▶ RUN NOW
+            </button>
+
+            <div class="menu-grid">
+              <button id="btnMissions" class="btn-secondary-royal">
+                <span class="btn-ico">📜</span>
+                <span>MISSIONS</span>
+                <small id="menuMissionCount">0/120</small>
+              </button>
+              <button id="btnShop" class="btn-secondary-royal">
+                <span class="btn-ico">👔</span>
+                <span>SHOP</span>
+                <small>8 Skins</small>
+              </button>
+              <button id="btnWorlds" class="btn-secondary-royal">
+                <span class="btn-ico">🏰</span>
+                <span>WORLDS</span>
+                <small id="menuWorldCount">1/11</small>
+              </button>
+              <button id="btnAchievements" class="btn-secondary-royal">
+                <span class="btn-ico">🏆</span>
+                <span>TROPHIES</span>
+                <small id="menuAchCount">0/10</small>
+              </button>
+              <button id="btnSettings" class="btn-secondary-royal">
+                <span class="btn-ico">⚙️</span>
+                <span>SETTINGS</span>
+                <small>Audio & Data</small>
+              </button>
+              <button id="btnControlsHelp" class="btn-secondary-royal">
+                <span class="btn-ico">🎵</span>
+                <span>CREDITS &amp; HELP</span>
+                <small>Music &amp; Keys</small>
+              </button>
+            </div>
+            <div class="menu-music-credits-bar">
+              🎵 Soundtrack: <strong>DreamyAuraTunes</strong> • <strong>Avi Remix</strong> • <strong>UP PHONK</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== PAUSE MODAL ==================== -->
+    <div id="pauseModal" class="modal-overlay hidden">
+      <div class="modal-card compact-modal">
+        <h2 class="modal-title">GAME PAUSED</h2>
+        <p class="modal-subtitle">The King takes a royal breath</p>
+        <div class="modal-actions-col">
+          <button id="btnResume" class="btn-primary-royal">▶ RESUME</button>
+          <button id="btnRestartPause" class="btn-secondary-royal">↻ RESTART RUN</button>
+          <button id="btnSettingsPause" class="btn-secondary-royal">⚙️ SETTINGS</button>
+          <button id="btnMainMenuPause" class="btn-danger-royal">🏠 MAIN MENU</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== GAME OVER / VICTORY MODAL ==================== -->
+    <div id="gameOverModal" class="modal-overlay hidden">
+      <div class="modal-card gameover-card">
+        <div id="gameOverBadge" class="gameover-badge">ROYAL RUN COMPLETE</div>
+        <h2 id="gameOverTitle" class="modal-title">GAME OVER</h2>
+        <div id="newBestTag" class="new-best-tag hidden">★ NEW ROYAL RECORD! ★</div>
+
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span class="stat-lbl">FINAL SCORE</span>
+            <span id="goScore" class="stat-num">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-lbl">BEST SCORE</span>
+            <span id="goBest" class="stat-num gold">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-lbl">DISTANCE</span>
+            <span id="goDistance" class="stat-num">0m</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-lbl">COINS</span>
+            <span id="goCoins" class="stat-num">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-lbl">OBSTACLES DODGED</span>
+            <span id="goDodged" class="stat-num">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-lbl">MISSIONS</span>
+            <span id="goMissions" class="stat-num">0/100</span>
+          </div>
+        </div>
+
+        <div id="goMissionResultBox" class="go-mission-box">
+          <div id="goMissionStatus" class="go-mission-status">MISSION FAILED</div>
+          <div id="goMissionTitle" class="go-mission-title">#1 First Steps</div>
+          <div id="goMissionProgress" class="go-mission-progress">Progress: 0 / 1</div>
+        </div>
+
+        <div class="modal-actions-row">
+          <button id="btnRetryRun" class="btn-secondary-royal">↻ RETRY</button>
+          <button id="btnMissionNext" class="btn-primary-royal hidden">▶ NEXT MISSION</button>
+          <button id="btnGoMainMenu" class="btn-secondary-royal">🏠 MAIN MENU</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== MISSIONS MODAL (100 MISSIONS) ==================== -->
+    <div id="missionsModal" class="modal-overlay hidden">
+      <div class="modal-card wide-modal">
+        <div class="modal-header">
+          <div>
+            <h2 class="modal-title">ROYAL MISSIONS (120)</h2>
+            <p class="modal-subtitle">Complete 12 Chapters across North & South India</p>
+          </div>
+          <button class="modal-close" data-close="missionsModal">✕</button>
+        </div>
+        <div id="chapterTabs" class="chapter-tabs"></div>
+        <div id="missionsList" class="missions-list"></div>
+      </div>
+    </div>
+
+    <!-- ==================== SHOP MODAL ==================== -->
+    <div id="shopModal" class="modal-overlay hidden">
+      <div class="modal-card wide-modal">
+        <div class="modal-header">
+          <div>
+            <h2 class="modal-title">ROYAL TAILOR & SHOP</h2>
+            <p class="modal-subtitle">Customize Sheru Bhai's signature luxury look</p>
+          </div>
+          <div class="wallet-bar compact">
+            <div class="wallet-item"><span class="icon-coin">●</span> <span id="shopCoins">0</span></div>
+            <div class="wallet-item"><span class="icon-gem">◆</span> <span id="shopGems">0</span></div>
+            <div class="wallet-item"><span class="icon-crown">♛</span> <span id="shopCrowns">0</span></div>
+          </div>
+          <button class="modal-close" data-close="shopModal">✕</button>
+        </div>
+        <div id="shopGrid" class="shop-grid"></div>
+      </div>
+    </div>
+
+    <!-- ==================== WORLDS MODAL ==================== -->
+    <div id="worldsModal" class="modal-overlay hidden">
+      <div class="modal-card wide-modal">
+        <div class="modal-header">
+          <div>
+            <h2 class="modal-title">ROYAL KINGDOMS (11 WORLDS)</h2>
+            <p class="modal-subtitle">Explore North & South India — Jaipur, Chennai, Coimbatore, Bengaluru, Hyderabad & more</p>
+          </div>
+          <button class="modal-close" data-close="worldsModal">✕</button>
+        </div>
+        <div id="worldsGrid" class="worlds-grid"></div>
+      </div>
+    </div>
+
+    <!-- ==================== ACHIEVEMENTS MODAL ==================== -->
+    <div id="achievementsModal" class="modal-overlay hidden">
+      <div class="modal-card wide-modal">
+        <div class="modal-header">
+          <div>
+            <h2 class="modal-title">ROYAL TROPHIES</h2>
+            <p class="modal-subtitle">Earn Crowns and glory across the kingdom</p>
+          </div>
+          <button class="modal-close" data-close="achievementsModal">✕</button>
+        </div>
+        <div id="achievementsGrid" class="achievements-grid"></div>
+      </div>
+    </div>
+
+    <!-- ==================== SETTINGS MODAL ==================== -->
+    <div id="settingsModal" class="modal-overlay hidden">
+      <div class="modal-card compact-modal">
+        <div class="modal-header">
+          <h2 class="modal-title">SETTINGS</h2>
+          <button class="modal-close" data-close="settingsModal">✕</button>
+        </div>
+        <div class="settings-list">
+          <div class="setting-row">
+            <label for="musicVolume">Music Volume</label>
+            <input id="musicVolume" type="range" min="0" max="100" value="60" />
+          </div>
+          <div class="setting-row">
+            <label for="sfxVolume">SFX Volume</label>
+            <input id="sfxVolume" type="range" min="0" max="100" value="80" />
+          </div>
+          <div class="setting-row">
+            <label for="musicTrackSelect">Music Track</label>
+            <select id="musicTrackSelect" class="royal-select">
+              <option value="playlist">All 3 Tracks (Playlist)</option>
+              <option value="track1">SHERU BHAI – Official Song</option>
+              <option value="track2">Sheru Bhai Phonk DJ Avi Remix</option>
+              <option value="track3">Tadban Tadban Sheru Bhai Ka Gana</option>
+            </select>
+          </div>
+          <div class="setting-row toggle-row">
+            <label for="toggleParticles">Visual Particles</label>
+            <input id="toggleParticles" type="checkbox" checked />
+          </div>
+          <div class="setting-row toggle-row">
+            <label for="toggleShake">Screen Shake</label>
+            <input id="toggleShake" type="checkbox" checked />
+          </div>
+          <hr class="royal-divider" />
+          <div class="reset-zone">
+            <button id="btnResetProgress" class="btn-danger-royal">🗑 RESET ALL PROGRESS</button>
+            <div id="resetConfirmBox" class="reset-confirm hidden">
+              <p>Are you sure? All coins, skins, worlds & 100 missions will be erased!</p>
+              <div class="modal-actions-row">
+                <button id="btnConfirmReset" class="btn-danger-royal">YES, RESET</button>
+                <button id="btnCancelReset" class="btn-secondary-royal">CANCEL</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== CONTROLS & MUSIC CREDITS MODAL ==================== -->
+    <div id="controlsModal" class="modal-overlay hidden">
+      <div class="modal-card compact-modal">
+        <div class="modal-header">
+          <h2 class="modal-title">CONTROLS &amp; MUSIC CREDITS</h2>
+          <button class="modal-close" data-close="controlsModal">✕</button>
+        </div>
+        <div class="controls-guide">
+          <div class="guide-section">
+            <h4>🎵 Official Soundtrack Credits</h4>
+            <div class="credits-list">
+              <div class="credit-item">
+                <strong>SHERU BHAI – Official Song</strong>
+                <span>Artist: DreamyAuraTunes</span>
+              </div>
+              <div class="credit-item">
+                <strong>Sheru Bhai Phonk DJ Avi Remix OFFICIAL</strong>
+                <span>Artist/Producer: Avi Remix</span>
+              </div>
+              <div class="credit-item">
+                <strong>Tadban Tadban Sheru Bhai Ka Gana</strong>
+                <span>Artist: UP PHONK</span>
+              </div>
+            </div>
+          </div>
+          <div class="guide-section">
+            <h4>Desktop Controls</h4>
+            <p><kbd>SPACE</kbd> / <kbd>W</kbd> / <kbd>↑</kbd> — Jump & Double Jump</p>
+            <p><kbd>S</kbd> / <kbd>↓</kbd> — Slide / Fast Fall</p>
+            <p><kbd>SHIFT</kbd> — Activate Royal Dash / Special</p>
+            <p><kbd>ESC</kbd> — Pause &nbsp;|&nbsp; <kbd>ENTER</kbd> — Start / Retry</p>
+          </div>
+          <div class="guide-section">
+            <h4>Mobile Touch Controls</h4>
+            <p><strong>Tap / Swipe Up</strong> — Jump & Double Jump</p>
+            <p><strong>Swipe Down</strong> — Slide under air obstacles</p>
+            <p><strong>⚡ Button</strong> — Activate Special Power</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts loaded in dependency order (works on both file:// and HTTP) -->
+  <script src="js/data.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/renderer.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

@@ -164,9 +164,10 @@
   let viewScale = 1;
 
   function resizeCanvas() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const cssW = window.innerWidth;
     const cssH = window.innerHeight;
+    const maxDpr = cssW <= 1024 ? 1.25 : 1.5;
+    const dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
     viewScale = Math.max(0.54, Math.min(1.3, Math.min(cssW / 820, cssH / 560)));
     width = cssW / viewScale;
     height = cssH / viewScale;
@@ -814,15 +815,17 @@
   // ==================== PARTICLES ====================
   function spawnParticles(x, y, count, color) {
     if (!STORAGE.getState().settings.particles) return;
-    for (let i = 0; i < count; i++) {
+    const maxParticles = 36;
+    const allowed = Math.min(count, maxParticles - run.particles.length);
+    for (let i = 0; i < allowed; i++) {
       run.particles.push({
         x,
         y,
         vx: (Math.random() - 0.5) * 220,
         vy: (Math.random() - 0.8) * 220,
-        life: 0.4 + Math.random() * 0.35,
-        maxLife: 0.75,
-        size: 3 + Math.random() * 4,
+        life: 0.35 + Math.random() * 0.3,
+        maxLife: 0.65,
+        size: 3 + Math.random() * 3.5,
         color
       });
     }
@@ -845,10 +848,17 @@
     if (run.shakeTimer > 0) run.shakeTimer = Math.max(0, run.shakeTimer - dt);
     if (p.invulnTimer > 0) p.invulnTimer = Math.max(0, p.invulnTimer - dt);
 
-    // Power-up countdowns
+    // Power-up countdowns (with safe landing grace period when Royal Flight ends)
     for (const key of Object.keys(run.activePowers)) {
       run.activePowers[key] -= dt;
-      if (run.activePowers[key] <= 0) delete run.activePowers[key];
+      if (run.activePowers[key] <= 0) {
+        delete run.activePowers[key];
+        if (key === 'flight') {
+          p.invulnTimer = Math.max(p.invulnTimer, 2.2);
+          run.obstacles = run.obstacles.filter(o => o.x > p.x + 280 || o.x + o.w < p.x - 40);
+          showToast('🦅 Safe Landing!');
+        }
+      }
     }
 
     // Speed progression
@@ -898,7 +908,7 @@
     let landedThisFrame = false;
 
     if (run.activePowers.flight) {
-      const targetY = groundY - 155;
+      const targetY = Math.max(70, groundY - 195);
       p.y += (targetY - p.y) * Math.min(1, dt * 8);
       p.vy = 0;
       p.isGrounded = false;
@@ -1051,7 +1061,10 @@
         }
       }
 
-      // AABB Collision (skip side/top collision when safely standing on a moving_platform)
+      // AABB Collision (immune while flying high, or standing safely on a moving_platform)
+      if (run.activePowers.flight) {
+        continue;
+      }
       if (o.kind === 'moving_platform' && p.y + p.h <= o.y + 6) {
         continue;
       }
@@ -1174,8 +1187,15 @@
       if (checkMissionsAndAchievements()) return;
     }
 
-    updateHud();
+    // Throttle HUD DOM updates to ~12 Hz to eliminate mobile DOM reflow lag
+    run.hudTimer = (run.hudTimer || 0) - dt;
+    if (run.hudTimer <= 0) {
+      run.hudTimer = 0.08;
+      updateHud();
+    }
   }
+
+  let lastPowerHtml = '';
 
   function updateHud() {
     el.hudScore.textContent = Math.floor(run.score).toLocaleString();
@@ -1201,17 +1221,18 @@
         : `#${am.id} ${am.title} (${val}/${target})`;
     }
 
-    // Active Powerup Pills
-    el.activePowerups.innerHTML = '';
+    // Active Powerup Pills (only touch DOM when changed)
+    let powerHtml = '';
     for (const [key, rem] of Object.entries(run.activePowers)) {
       const def = DATA.POWERUPS[key];
       if (!def) continue;
       const pct = Math.max(0, Math.min(100, (rem / def.duration) * 100));
-      const pill = document.createElement('div');
-      pill.className = 'powerup-pill';
-      pill.innerHTML = `<span>${def.icon} ${def.name}</span>
-        <div class="powerup-bar-wrap"><div class="powerup-bar-fill" style="width:${pct}%;background:${def.color}"></div></div>`;
-      el.activePowerups.appendChild(pill);
+      powerHtml += `<div class="powerup-pill"><span>${def.icon} ${def.name}</span>
+        <div class="powerup-bar-wrap"><div class="powerup-bar-fill" style="width:${pct.toFixed(0)}%;background:${def.color}"></div></div></div>`;
+    }
+    if (powerHtml !== lastPowerHtml) {
+      el.activePowerups.innerHTML = powerHtml;
+      lastPowerHtml = powerHtml;
     }
 
     el.btnSpecialMobile.style.opacity = run.specialCooldown > 0 ? '0.45' : '1';

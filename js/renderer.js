@@ -357,24 +357,25 @@ window.GAME_RENDERER = (() => {
     ctx.ellipse(0, headY + 22, 33, 18, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Dense Multi-Layered Lion Mane (thick, lush fur strands + cheek ruff)
+    // Dense Multi-Layered Lion Mane (optimized batch paths for 60 FPS on mobile & tablets)
     // Layer A: Deep Undercoat Volume
     ctx.fillStyle = shadeColor(skin.mane, -14);
-    for (let i = 0; i < 24; i++) {
-      const a = (i / 24) * Math.PI * 2;
+    ctx.beginPath();
+    for (let i = 0; i < 20; i++) {
+      const a = (i / 20) * Math.PI * 2;
       const isBottom = Math.sin(a) > 0.42;
       const radDist = isBottom ? headR * 0.88 : headR * 1.32;
       const tuftR = isBottom ? 11 : 15;
       const rx = Math.cos(a) * radDist * 1.04;
       const ry = headY + Math.sin(a) * radDist * (isBottom ? 0.9 : 1.08);
-      ctx.beginPath();
+      ctx.moveTo(rx + tuftR, ry);
       ctx.arc(rx, ry, tuftR, 0, Math.PI * 2);
-      ctx.fill();
     }
+    ctx.fill();
 
     // Layer B: Dense Feathered Radial Fur Strands
     ctx.fillStyle = shadeColor(skin.mane, -5);
-    const densePts = 32;
+    const densePts = 28;
     ctx.beginPath();
     for (let i = 0; i <= densePts * 2; i++) {
       const a = (i / (densePts * 2)) * Math.PI * 2;
@@ -390,30 +391,32 @@ window.GAME_RENDERER = (() => {
     ctx.closePath();
     ctx.fill();
 
-    // Layer C: Bright Fluffy Mid-Mane & Crown Tufts
+    // Layer C: Bright Fluffy Mid-Mane & Crown Tufts (single batched fill)
     ctx.fillStyle = skin.mane;
-    for (let i = 0; i < 20; i++) {
-      const a = (i / 20) * Math.PI * 2 + 0.1;
+    ctx.beginPath();
+    for (let i = 0; i < 18; i++) {
+      const a = (i / 18) * Math.PI * 2 + 0.1;
       const isBottom = Math.sin(a) > 0.45;
       const radDist = isBottom ? headR * 0.82 : headR * 1.12;
       const rx = Math.cos(a) * radDist * 0.96;
       const ry = headY + Math.sin(a) * radDist * (isBottom ? 0.84 : 1.02);
-      ctx.beginPath();
-      ctx.arc(rx, ry, isBottom ? 9 : 12.5, 0, Math.PI * 2);
-      ctx.fill();
+      const tr = isBottom ? 9 : 12.5;
+      ctx.moveTo(rx + tr, ry);
+      ctx.arc(rx, ry, tr, 0, Math.PI * 2);
     }
+    ctx.fill();
 
     // Layer D: Subtle Fur Texture Lines inside Mane
     ctx.strokeStyle = 'rgba(170, 145, 108, 0.28)';
     ctx.lineWidth = 1.2;
-    for (let i = 0; i < 16; i++) {
-      const a = (i / 16) * Math.PI * 2;
+    ctx.beginPath();
+    for (let i = 0; i < 14; i++) {
+      const a = (i / 14) * Math.PI * 2;
       if (Math.sin(a) > 0.5) continue;
-      ctx.beginPath();
       ctx.moveTo(Math.cos(a) * 21, headY + Math.sin(a) * 21);
       ctx.lineTo(Math.cos(a) * 35, headY + Math.sin(a) * 36);
-      ctx.stroke();
     }
+    ctx.stroke();
 
     // Rounded Lion Ears (tucked in upper mane with inner ear shadow)
     [-1, 1].forEach(side => {
@@ -427,13 +430,9 @@ window.GAME_RENDERER = (() => {
       ctx.fill();
     });
 
-    // Sculpted Lion Face & Cheekbones
+    // Sculpted Lion Face & Cheekbones (fast fill without per-frame gradient allocation)
     const fx = isIdle || isVictory ? 0 : 2.5;
-    const faceGrad = ctx.createRadialGradient(fx, headY - 4, 4, fx, headY + 2, headR);
-    faceGrad.addColorStop(0, '#ffffff');
-    faceGrad.addColorStop(0.75, skin.fur);
-    faceGrad.addColorStop(1, shadeColor(skin.fur, -8));
-    ctx.fillStyle = faceGrad;
+    ctx.fillStyle = skin.fur;
     ctx.beginPath();
     ctx.moveTo(fx - 17, headY - 12);
     ctx.quadraticCurveTo(fx, headY - 22, fx + 17, headY - 12);
@@ -625,15 +624,18 @@ window.GAME_RENDERER = (() => {
     }
     ctx.restore();
 
-    // Sun / Moon with Halo
-    ctx.save();
-    ctx.fillStyle = world.sunColor;
-    ctx.shadowColor = world.sunColor;
-    ctx.shadowBlur = 45;
+    // Sun / Moon with lightweight Halo (no expensive GPU shadowBlur)
+    const sunX = width * 0.78;
+    const sunY = groundY * 0.24;
+    const sunR = Math.min(width, height) * 0.072;
+    ctx.fillStyle = 'rgba(255, 230, 150, 0.16)';
     ctx.beginPath();
-    ctx.arc(width * 0.78, groundY * 0.24, Math.min(width, height) * 0.072, 0, Math.PI * 2);
+    ctx.arc(sunX, sunY, sunR * 1.55, 0, Math.PI * 2);
     ctx.fill();
-    ctx.restore();
+    ctx.fillStyle = world.sunColor;
+    ctx.beginPath();
+    ctx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
+    ctx.fill();
 
     // Far Layer (0.15x speed)
     drawParallaxLayer(ctx, width, groundY, scrollX * 0.15, world.farColor, 155, world.id, 'far', time);
@@ -1100,9 +1102,9 @@ window.GAME_RENDERER = (() => {
       case 'laser_barrier':
         ctx.fillStyle = '#1f2937';
         ctx.fillRect(x, y + h - 10, w, 10);
+        ctx.fillStyle = 'rgba(255, 0, 85, 0.28)';
+        ctx.fillRect(x + w * 0.2, y, w * 0.6, h - 8);
         ctx.fillStyle = '#ff0055';
-        ctx.shadowColor = '#ff0055';
-        ctx.shadowBlur = 16;
         ctx.fillRect(x + w * 0.35, y, w * 0.3, h - 8);
         break;
 
@@ -1200,8 +1202,9 @@ window.GAME_RENDERER = (() => {
 
       case 'boss_laser':
       case 'dark_slash':
-        ctx.shadowColor = kind === 'boss_laser' ? '#00f5d4' : '#ff0055';
-        ctx.shadowBlur = 16;
+        ctx.fillStyle = kind === 'boss_laser' ? 'rgba(0, 245, 212, 0.25)' : 'rgba(255, 0, 85, 0.25)';
+        roundRect(ctx, x - 4, y + h * 0.15, w + 8, h * 0.7, 12);
+        ctx.fill();
         ctx.fillStyle = kind === 'boss_laser' ? '#00f5d4' : '#ff2a6d';
         roundRect(ctx, x, y + h * 0.25, w, h * 0.5, 10);
         ctx.fill();
@@ -1286,9 +1289,11 @@ window.GAME_RENDERER = (() => {
 
     if (item.kind === 'coin') {
       const spin = Math.max(0.32, Math.abs(Math.cos(time * 5 + item.x * 0.02)));
+      ctx.fillStyle = 'rgba(255, 215, 0, 0.22)';
+      ctx.beginPath();
+      ctx.arc(cx, cy, item.w * 0.65, 0, Math.PI * 2);
+      ctx.fill();
       ctx.fillStyle = '#ffd700';
-      ctx.shadowColor = 'rgba(255, 215, 0, 0.75)';
-      ctx.shadowBlur = 10;
       ctx.beginPath();
       ctx.ellipse(cx, cy, (item.w / 2) * spin, item.h / 2, 0, 0, Math.PI * 2);
       ctx.fill();
@@ -1303,9 +1308,11 @@ window.GAME_RENDERER = (() => {
         ctx.fillText('₹', cx, cy + 1);
       }
     } else if (item.kind === 'gem') {
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.25)';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 16, 0, Math.PI * 2);
+      ctx.fill();
       ctx.fillStyle = '#38bdf8';
-      ctx.shadowColor = '#38bdf8';
-      ctx.shadowBlur = 14;
       ctx.beginPath();
       ctx.moveTo(cx, cy - 13);
       ctx.lineTo(cx + 11, cy);
@@ -1316,10 +1323,12 @@ window.GAME_RENDERER = (() => {
     } else if (item.kind === 'chakram') {
       ctx.translate(cx, cy);
       ctx.rotate(time * 8);
+      ctx.fillStyle = 'rgba(255, 215, 0, 0.25)';
+      ctx.beginPath();
+      ctx.arc(0, 0, 19, 0, Math.PI * 2);
+      ctx.fill();
       ctx.strokeStyle = '#ffd700';
       ctx.lineWidth = 4;
-      ctx.shadowColor = '#ffd700';
-      ctx.shadowBlur = 16;
       ctx.beginPath();
       ctx.arc(0, 0, 14, 0, Math.PI * 2);
       ctx.stroke();
@@ -1332,8 +1341,6 @@ window.GAME_RENDERER = (() => {
       ctx.fillStyle = 'rgba(18, 14, 34, 0.88)';
       ctx.strokeStyle = p ? p.color : '#ffd700';
       ctx.lineWidth = 3;
-      ctx.shadowColor = p ? p.color : '#ffd700';
-      ctx.shadowBlur = 16;
       ctx.beginPath();
       ctx.arc(cx, cy, 18, 0, Math.PI * 2);
       ctx.fill();

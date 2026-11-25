@@ -15,8 +15,9 @@
     <div class="rotate-inner">
       <div class="rotate-icon">📱↻</div>
       <h2>ROTATE YOUR DEVICE</h2>
-      <p>Sheru Bhai runs best in <strong>Landscape</strong> mode!</p>
-      <p class="rotate-hint">Turn your phone sideways to play</p>
+      <p>Sheru Bhai plays only in <strong>Landscape</strong> mode!</p>
+      <p class="rotate-hint">Turn your phone sideways or tap below to rotate</p>
+      <button id="btnForceLandscape" class="btn-primary-royal rotate-btn">↻ PLAY IN LANDSCAPE</button>
     </div>
   </div>
 
@@ -29,7 +30,8 @@
 
     <!-- ==================== GAMEPLAY HUD ==================== -->
     <div id="gameplayHud" class="hud hidden">
-      <div class="hud-top">
+      <div class="hud-header-group">
+        <div class="hud-top">
         <div class="hud-left">
           <div class="hud-stat score-pill">
             <span class="hud-label">SCORE</span>
@@ -92,8 +94,9 @@
         </div>
         <div id="activePowerups" class="active-powerups"></div>
       </div>
+      </div>
 
-      <!-- Subtle First-Seconds Control Guide -->
+      <!-- Subtle First-Seconds Control Guide (Desktop only) -->
       <div id="runTutorialHint" class="run-tutorial hidden">
         SPACE / TAP: JUMP &amp; DOUBLE JUMP &nbsp;•&nbsp; S / SWIPE DOWN: SLIDE &nbsp;•&nbsp; SHIFT / ⚡: ROYAL STRIKE
       </div>

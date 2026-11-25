@@ -245,7 +245,8 @@
     el.btnSpecialMobile.classList.remove('hidden');
     el.hudWorldName.textContent = run.world.name;
     el.hudDiffBadge.textContent = run.diff.label;
-    el.runTutorialHint.classList.remove('hidden');
+    const isDesktop = !window.matchMedia('(pointer: coarse)').matches && window.innerWidth > 1024;
+    el.runTutorialHint.classList.toggle('hidden', !isDesktop);
 
     // Try to enter fullscreen & lock landscape on supported devices
     try {
@@ -1716,7 +1717,22 @@
     syncMuteUI();
   });
 
-  // Fullscreen toggle button
+  // Fullscreen toggle & portrait-to-landscape rotate button
+  function enterLandscapeFullscreen() {
+    try {
+      const root = document.documentElement;
+      if (!document.fullscreenElement && root.requestFullscreen) {
+        root.requestFullscreen().catch(() => {});
+      }
+      if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('landscape').catch(() => {});
+      }
+    } catch (e) { /* unsupported */ }
+  }
+  const btnForceLandscape = document.getElementById('btnForceLandscape');
+  if (btnForceLandscape) {
+    btnForceLandscape.addEventListener('click', enterLandscapeFullscreen);
+  }
   const btnFullscreen = document.getElementById('btnFullscreen');
   if (btnFullscreen) {
     btnFullscreen.addEventListener('click', () => {
@@ -1724,7 +1740,7 @@
         if (document.fullscreenElement) {
           document.exitFullscreen();
         } else {
-          document.documentElement.requestFullscreen().catch(() => {});
+          enterLandscapeFullscreen();
         }
       } catch (e) { /* unsupported */ }
     });

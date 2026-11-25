@@ -10,6 +10,16 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- Rotate-to-Landscape Overlay (shown only on portrait mobiles/tablets) -->
+  <div id="rotateOverlay">
+    <div class="rotate-inner">
+      <div class="rotate-icon">📱↻</div>
+      <h2>ROTATE YOUR DEVICE</h2>
+      <p>Sheru Bhai runs best in <strong>Landscape</strong> mode!</p>
+      <p class="rotate-hint">Turn your phone sideways to play</p>
+    </div>
+  </div>
+
   <div id="app">
     <!-- Main Game Canvas -->
     <canvas id="gameCanvas"></canvas>
@@ -59,6 +69,9 @@
           </div>
           <button id="btnMuteHud" class="hud-icon-btn" title="Mute / Unmute Audio" aria-label="Toggle Audio">
             <span>🔊</span>
+          </button>
+          <button id="btnFullscreen" class="hud-icon-btn" title="Fullscreen Toggle" aria-label="Toggle Fullscreen">
+            <span>⛶</span>
           </button>
           <button id="btnPause" class="hud-icon-btn" title="Pause (ESC)" aria-label="Pause Game">
             <span>❚❚</span>

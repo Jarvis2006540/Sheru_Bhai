@@ -498,14 +498,51 @@ window.GAME_RENDERER = (() => {
     const exLeft = fx + (isIdle || isVictory ? -8.5 : -5);
     const exRight = fx + (isIdle || isVictory ? 8.5 : 11);
     if (skin.sunglasses) {
-      ctx.fillStyle = '#111118';
-      roundRect(ctx, exLeft - 6, headY - 8, 12, 8, 2.5);
-      roundRect(ctx, exRight - 6, headY - 8, 12, 8, 2.5);
+      // --- Black Aviator Sunglasses with Gold Frame ---
+      const drawLens = (cx, cy) => {
+        ctx.beginPath();
+        ctx.moveTo(cx - 7.5, cy - 5);
+        ctx.quadraticCurveTo(cx, cy - 7.5, cx + 7.5, cy - 5);
+        ctx.quadraticCurveTo(cx + 9, cy + 1, cx + 6, cy + 5);
+        ctx.quadraticCurveTo(cx, cy + 6.5, cx - 6, cy + 5);
+        ctx.quadraticCurveTo(cx - 9, cy + 1, cx - 7.5, cy - 5);
+        ctx.closePath();
+      };
+      // Dark tinted lenses
+      ctx.fillStyle = 'rgba(10, 10, 18, 0.92)';
+      ctx.beginPath();
+      drawLens(exLeft, headY - 3);
+      drawLens(exRight, headY - 3);
       ctx.fill();
+      // Gold metal frame
       ctx.strokeStyle = '#d4af37';
-      ctx.lineWidth = 1.6;
-      ctx.strokeRect(exLeft - 6, headY - 8, 12, 8);
-      ctx.strokeRect(exRight - 6, headY - 8, 12, 8);
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      drawLens(exLeft, headY - 3);
+      ctx.stroke();
+      ctx.beginPath();
+      drawLens(exRight, headY - 3);
+      ctx.stroke();
+      // Bridge between lenses
+      ctx.beginPath();
+      ctx.moveTo(exLeft + 7, headY - 5);
+      ctx.quadraticCurveTo((exLeft + exRight) / 2, headY - 7.5, exRight - 7, headY - 5);
+      ctx.stroke();
+      // Temple arms extending to ears
+      ctx.beginPath();
+      ctx.moveTo(exLeft - 7.5, headY - 4);
+      ctx.lineTo(exLeft - 14, headY - 5);
+      ctx.moveTo(exRight + 7.5, headY - 4);
+      ctx.lineTo(exRight + 14, headY - 5);
+      ctx.stroke();
+      // Subtle lens reflection glare
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
+      ctx.beginPath();
+      ctx.ellipse(exLeft - 2, headY - 5, 3, 1.4, -0.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(exRight - 2, headY - 5, 3, 1.4, -0.3, 0, Math.PI * 2);
+      ctx.fill();
     } else {
       // Sculpted Brow Ridge
       ctx.strokeStyle = 'rgba(130, 102, 70, 0.65)';

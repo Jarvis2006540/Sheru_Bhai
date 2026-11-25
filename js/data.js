@@ -235,7 +235,7 @@ window.GAME_DATA = (() => {
     {
       id: 'classic',
       name: 'Classic White Sheru',
-      desc: 'Signature cream-white 3-piece suit, gold chain & brown loafers.',
+      desc: 'Signature cream-white 3-piece suit, gold chain, brown loafers & black sunglasses.',
       cost: { coins: 0, gems: 0 },
       fur: '#f9f6ef',
       mane: '#f2eadb',
@@ -244,7 +244,7 @@ window.GAME_DATA = (() => {
       shirt: '#ffffff',
       tieOrChain: '#ffd700',
       shoes: '#5a3219',
-      sunglasses: false,
+      sunglasses: true,
       crown: false,
       glow: null
     },

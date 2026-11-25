@@ -247,6 +247,17 @@
     el.hudDiffBadge.textContent = run.diff.label;
     el.runTutorialHint.classList.remove('hidden');
 
+    // Try to enter fullscreen & lock landscape on supported devices
+    try {
+      const root = document.documentElement;
+      if (!document.fullscreenElement && root.requestFullscreen) {
+        root.requestFullscreen().catch(() => {});
+      }
+      if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('landscape').catch(() => {});
+      }
+    } catch (e) { /* Not supported — game still works */ }
+
     AUDIO.startMusic(run.world.musicTheme);
   }
 
@@ -274,6 +285,10 @@
     el.pauseModal.classList.add('hidden');
     el.gameOverModal.classList.add('hidden');
     el.mainMenu.classList.remove('hidden');
+    // Exit fullscreen when returning to menu
+    try {
+      if (document.fullscreenElement) document.exitFullscreen();
+    } catch (e) { /* ignore */ }
     refreshMenuUI();
   }
 
@@ -330,7 +345,9 @@
       return;
     }
 
-    el.goMissionResultBox.classList.remove('hidden', 'passed', 'failed');
+    el.goMissionResultBox.classList.remove('hidden');
+    el.goMissionResultBox.classList.remove('passed');
+    el.goMissionResultBox.classList.remove('failed');
     const activeMission = STORAGE.getCurrentMission();
     const target = STORAGE.getMissionTarget(activeMission);
     const passed = Boolean(completedNow) || save.completedMissions.includes(activeMission.id);
@@ -1692,6 +1709,24 @@
     AUDIO.setVolumes(hudMuted ? 0 : s.musicVolume, hudMuted ? 0 : s.sfxVolume);
     syncMuteUI();
   });
+
+  // Fullscreen toggle button
+  const btnFullscreen = document.getElementById('btnFullscreen');
+  if (btnFullscreen) {
+    btnFullscreen.addEventListener('click', () => {
+      try {
+        if (document.fullscreenElement) {
+          document.exitFullscreen();
+        } else {
+          document.documentElement.requestFullscreen().catch(() => {});
+        }
+      } catch (e) { /* unsupported */ }
+    });
+    document.addEventListener('fullscreenchange', () => {
+      const span = btnFullscreen.querySelector('span');
+      if (span) span.textContent = document.fullscreenElement ? '⊟' : '⛶';
+    });
+  }
   AUDIO.onTrackChange((track) => {
     if (el.hudTrackInfo && track) {
       el.hudTrackInfo.textContent = `${track.title} • ${track.artist}`;

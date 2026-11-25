@@ -24,6 +24,67 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* ==================== ROTATE-TO-LANDSCAPE OVERLAY ==================== */
+#rotateOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: radial-gradient(circle at 50% 40%, #1a1430 0%, #0c0a14 100%);
+  color: var(--cream);
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+}
+
+.rotate-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px;
+}
+
+.rotate-icon {
+  font-size: 3.5rem;
+  animation: rotatePhone 2s ease-in-out infinite;
+}
+
+@keyframes rotatePhone {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(90deg); }
+  50% { transform: rotate(90deg); }
+  75% { transform: rotate(0deg); }
+}
+
+#rotateOverlay h2 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--gold-bright);
+  letter-spacing: 0.08em;
+}
+
+#rotateOverlay p {
+  font-size: 0.95rem;
+  color: var(--cream-soft);
+}
+
+.rotate-hint {
+  font-size: 0.82rem !important;
+  opacity: 0.65;
+}
+
+/* Show overlay ONLY on small portrait screens (mobile & small tablets) */
+@media (orientation: portrait) and (max-width: 1024px) {
+  #rotateOverlay {
+    display: flex;
+  }
+  #app {
+    display: none !important;
+  }
+}
+
 html, body {
   width: 100%;
   height: 100%;

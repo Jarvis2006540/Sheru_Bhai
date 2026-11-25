@@ -639,233 +639,300 @@ window.GAME_RENDERER = (() => {
     ctx.restore();
   }
 
-  // ==================== ALL 11 REALISTIC INDIAN MAPS ====================
-  function drawBackground(ctx, width, height, groundY, world, scrollX, time) {
-    // Sky Gradient
+  // ==================== 11 MAP TEMPLATES & 5-LAYER ARCHITECTURE ====================
+  const MAP_TEMPLATES = {
+    palace: {
+      name: 'Jaipur Royal Palace',
+      theme: 'royal',
+      sky: ['#87B9E8', '#F5C58B'],
+      ground: '#C69A70',
+      atmosphere: 'warm',
+      particles: 'gold_dust'
+    },
+    city: {
+      name: 'Desi Bazaar Street',
+      theme: 'urban',
+      sky: ['#83B8DC', '#F6C38B'],
+      ground: '#48413C',
+      atmosphere: 'busy',
+      particles: 'street_dust'
+    },
+    desert: {
+      name: 'Thar Desert Kingdom',
+      theme: 'desert',
+      sky: ['#F7C878', '#E78A49'],
+      ground: '#D6A04E',
+      atmosphere: 'hot',
+      particles: 'sand_particles'
+    },
+    jungle: {
+      name: 'Sundarbans Jungle',
+      theme: 'jungle',
+      sky: ['#B4D9A0', '#477C54'],
+      ground: '#66513B',
+      atmosphere: 'humid',
+      particles: 'leaves_fireflies'
+    },
+    fortress: {
+      name: 'Chittorgarh Fortress',
+      theme: 'fortress',
+      sky: ['#8BB6DB', '#E9A66D'],
+      ground: '#8C7963',
+      atmosphere: 'historic',
+      particles: 'torch_sparks'
+    },
+    future: {
+      name: 'Neo-Bharat 2099',
+      theme: 'cyberpunk',
+      sky: ['#080D2B', '#25215E'],
+      ground: '#11172C',
+      atmosphere: 'futuristic',
+      particles: 'neon_sparks'
+    },
+    chennai: {
+      name: 'Chennai Marina & Mylapore',
+      theme: 'coastal',
+      sky: ['#7DC6EA', '#F8D3A0'],
+      ground: '#D3B68D',
+      atmosphere: 'tropical',
+      particles: 'sea_spray'
+    },
+    coimbatore: {
+      name: 'Coimbatore & Nilgiris',
+      theme: 'mountain',
+      sky: ['#8CC7E8', '#D4E9D2'],
+      ground: '#536F3E',
+      atmosphere: 'misty',
+      particles: 'mist_leaves'
+    },
+    bengaluru: {
+      name: 'Bengaluru Garden & Tech City',
+      theme: 'garden_city',
+      sky: ['#9CCCE8', '#F3C5A5'],
+      ground: '#77766B',
+      atmosphere: 'pleasant',
+      particles: 'pink_petals'
+    },
+    hyderabad: {
+      name: 'Hyderabad Charminar City',
+      theme: 'heritage_city',
+      sky: ['#899FC7', '#F5B58C'],
+      ground: '#A68C72',
+      atmosphere: 'evening',
+      particles: 'warm_lights'
+    },
+    kochi: {
+      name: 'Kochi Kerala Backwaters',
+      theme: 'backwaters',
+      sky: ['#8ECBD0', '#F4C69D'],
+      ground: '#557F65',
+      atmosphere: 'tropical',
+      particles: 'water_spray'
+    }
+  };
+
+  // Layer 1: Sky, Sun/Moon, Clouds, Stars, Atmosphere
+  function drawSky(ctx, map, world, width, height, groundY, scrollX, time) {
     const grad = ctx.createLinearGradient(0, 0, 0, groundY);
-    grad.addColorStop(0, world.skyTop);
-    grad.addColorStop(1, world.skyBottom);
+    grad.addColorStop(0, map.sky[0]);
+    grad.addColorStop(1, map.sky[1]);
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, width, groundY);
 
-    // Night/Cyber stars for dark sky worlds
-    if (world.id === 'future' || world.id === 'fortress' || world.id === 'hyderabad') {
-      ctx.fillStyle = world.id === 'future' ? 'rgba(0, 245, 212, 0.35)' : 'rgba(255, 244, 214, 0.4)';
-      for (let s = 0; s < 24; s++) {
-        const sx = ((s * 173 + 40) % width);
-        const sy = ((s * 67 + 18) % (groundY * 0.55));
-        ctx.fillRect(sx, sy, s % 3 === 0 ? 2 : 1.3, s % 3 === 0 ? 2 : 1.3);
+    if (map.theme === 'cyberpunk' || map.atmosphere === 'evening') {
+      ctx.fillStyle = map.theme === 'cyberpunk' ? 'rgba(0, 245, 212, 0.42)' : 'rgba(255, 244, 214, 0.35)';
+      for (let s = 0; s < 26; s++) {
+        const sx = (s * 173 + 40) % width;
+        const sy = (s * 67 + 16) % (groundY * 0.52);
+        const sz = s % 3 === 0 ? 2 : 1.3;
+        ctx.fillRect(sx, sy, sz, sz);
       }
     }
 
-    // Subtle Layered Clouds / Mist
-    ctx.save();
-    ctx.fillStyle = world.id === 'future' ? 'rgba(0, 245, 212, 0.07)' : 'rgba(255, 255, 255, 0.14)';
-    const cloudSpan = width + 320;
-    for (let i = 0; i < 4; i++) {
-      const cx = (((i * 340 - scrollX * 0.05) % cloudSpan) + cloudSpan) % cloudSpan - 120;
-      const cy = groundY * (0.14 + (i % 2) * 0.11);
-      ctx.beginPath();
-      ctx.ellipse(cx, cy, 74, 17, 0, 0, Math.PI * 2);
-      ctx.ellipse(cx + 34, cy - 8, 48, 15, 0, 0, Math.PI * 2);
-      ctx.ellipse(cx - 30, cy - 5, 36, 12, 0, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.restore();
-
-    // Sun / Moon with multi-ring atmospheric halo (lightweight, no shadowBlur)
+    // Sun / Cyber Moon with soft atmospheric halo
     const sunX = width * 0.78;
-    const sunY = groundY * 0.23;
-    const sunR = Math.min(width, height) * 0.068;
-    ctx.fillStyle = world.id === 'future' ? 'rgba(0, 245, 212, 0.1)' : 'rgba(255, 230, 150, 0.12)';
+    const sunY = groundY * 0.22;
+    const sunR = Math.min(width, height) * 0.065;
+    ctx.fillStyle = map.theme === 'cyberpunk' ? 'rgba(0, 245, 212, 0.12)' : 'rgba(255, 245, 200, 0.16)';
     ctx.beginPath();
-    ctx.arc(sunX, sunY, sunR * 1.9, 0, Math.PI * 2);
+    ctx.arc(sunX, sunY, sunR * 1.85, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = world.id === 'future' ? 'rgba(0, 245, 212, 0.2)' : 'rgba(255, 230, 150, 0.22)';
+    ctx.fillStyle = map.theme === 'cyberpunk' ? 'rgba(0, 245, 212, 0.24)' : 'rgba(255, 245, 200, 0.28)';
     ctx.beginPath();
-    ctx.arc(sunX, sunY, sunR * 1.35, 0, Math.PI * 2);
+    ctx.arc(sunX, sunY, sunR * 1.32, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = world.sunColor;
+    ctx.fillStyle = world.sunColor || '#fff3b0';
     ctx.beginPath();
     ctx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
     ctx.fill();
 
-    // Far Layer (0.15x speed)
-    drawParallaxLayer(ctx, width, groundY, scrollX * 0.15, world.farColor, 165, world.id, 'far', time);
-
-    // World-Specific Mid-Ground Water / Coastal Features
-    if (world.id === 'chennai') {
-      // Bay of Bengal ocean + rolling white surf foam along Marina Beach
-      ctx.fillStyle = '#0284c7';
-      ctx.fillRect(0, groundY - 32, width, 32);
-      ctx.fillStyle = '#0ea5e9';
-      ctx.fillRect(0, groundY - 32, width, 10);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
-      const waveOff = scrollX * 0.3;
-      for (let wx = -(waveOff % 95); wx < width + 95; wx += 95) {
-        ctx.beginPath();
-        ctx.ellipse(wx + 24, groundY - 16, 26, 2.5, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    } else if (world.id === 'kochi') {
-      // Kerala Backwater Canal + Detailed Kettuvallam Houseboats
-      ctx.fillStyle = '#0d6e66';
-      ctx.fillRect(0, groundY - 36, width, 36);
-      ctx.fillStyle = 'rgba(100, 223, 223, 0.22)';
-      const rOff = scrollX * 0.25;
-      for (let rx = -(rOff % 85); rx < width + 85; rx += 85) {
-        ctx.fillRect(rx, groundY - 22, 34, 2);
-      }
-      const boatOff = scrollX * 0.28;
-      for (let bx = -(boatOff % 380); bx < width + 380; bx += 380) {
-        // Wooden hull
-        ctx.fillStyle = '#4a2c11';
-        ctx.beginPath();
-        ctx.moveTo(bx + 14, groundY - 13);
-        ctx.lineTo(bx + 126, groundY - 13);
-        ctx.lineTo(bx + 108, groundY - 2);
-        ctx.lineTo(bx + 32, groundY - 2);
-        ctx.closePath();
-        ctx.fill();
-        // Woven bamboo canopy
-        ctx.fillStyle = '#d4a373';
-        ctx.beginPath();
-        ctx.arc(bx + 70, groundY - 13, 28, Math.PI, 0);
-        ctx.fill();
-        ctx.strokeStyle = '#8b5a2b';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        // Warm houseboat lantern
-        ctx.fillStyle = '#fde047';
-        ctx.beginPath();
-        ctx.arc(bx + 24, groundY - 18, 3.2, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    } else if (world.id === 'hyderabad') {
-      // Hussain Sagar Lake reflection strip
-      ctx.fillStyle = 'rgba(79, 70, 229, 0.38)';
-      ctx.fillRect(0, groundY - 22, width, 22);
-      ctx.fillStyle = 'rgba(255, 229, 180, 0.28)';
-      const hOff = scrollX * 0.22;
-      for (let hx = -(hOff % 110); hx < width + 110; hx += 110) {
-        ctx.fillRect(hx, groundY - 12, 38, 2);
-      }
-    }
-
-    // Mid Layer (0.42x speed)
-    if (world.id === 'city') {
-      drawIndianBazaarLayer(ctx, width, groundY, scrollX * 0.45, time);
-    } else {
-      drawParallaxLayer(ctx, width, groundY, scrollX * 0.42, world.midColor, 118, world.id, 'mid', time);
-    }
-
-    // Ground & Road Design per World
-    ctx.fillStyle = world.groundBody;
-    ctx.fillRect(0, groundY, width, height - groundY);
-
-    if (world.id === 'city' || world.id === 'bengaluru') {
-      // Indian Sidewalk Curb + Asphalt Road with Crisp White Dashed Lane Markings
-      ctx.fillStyle = world.id === 'city' ? '#b85d4b' : '#64748b';
-      ctx.fillRect(0, groundY - 10, width, 12);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.16)';
-      ctx.fillRect(0, groundY - 10, width, 2);
-      ctx.fillStyle = '#3f4754';
-      ctx.fillRect(0, groundY + 2, width, height - groundY);
-
-      ctx.fillStyle = '#f8f9fa';
-      const dashGap = 70;
-      const dashOffset = scrollX % dashGap;
-      for (let gx = -dashOffset; gx < width + dashGap; gx += dashGap) {
-        ctx.fillRect(gx, groundY + 38, 36, 5);
-      }
-    } else if (world.id === 'palace' || world.id === 'hyderabad' || world.id === 'fortress') {
-      // Carved Sandstone / Stone Flagstone Plaza with Gold / Mortar Trim
-      ctx.fillStyle = world.groundTop;
-      ctx.fillRect(0, groundY, width, 16);
-      ctx.fillStyle = world.id === 'palace' ? 'rgba(255, 215, 0, 0.35)' : 'rgba(255, 255, 255, 0.14)';
-      ctx.fillRect(0, groundY, width, 3);
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.22)';
-      ctx.lineWidth = 1.5;
-      const tileW = 72;
-      const offset = scrollX % tileW;
+    // Seamlessly drifting clouds
+    ctx.fillStyle = map.theme === 'cyberpunk' ? 'rgba(56, 189, 248, 0.08)' : 'rgba(255, 255, 255, 0.26)';
+    const cloudSpan = width + 320;
+    for (let i = 0; i < 4; i++) {
+      const cx = (((i * 340 - scrollX * 0.04) % cloudSpan) + cloudSpan) % cloudSpan - 120;
+      const cy = groundY * (0.14 + (i % 2) * 0.1);
       ctx.beginPath();
-      for (let gx = -offset; gx < width + tileW; gx += tileW) {
-        ctx.moveTo(gx, groundY);
-        ctx.lineTo(gx - 18, groundY + 46);
-      }
-      ctx.stroke();
-    } else if (world.id === 'desert') {
-      // Rippled Thar Desert Sand
-      ctx.fillStyle = world.groundTop;
-      ctx.fillRect(0, groundY, width, 16);
-      ctx.fillStyle = 'rgba(181, 124, 60, 0.45)';
-      const tileW = 84;
-      const offset = scrollX % tileW;
-      for (let gx = -offset; gx < width + tileW; gx += tileW) {
-        ctx.beginPath();
-        ctx.ellipse(gx + 30, groundY + 26, 26, 4, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    } else {
-      ctx.fillStyle = world.groundTop;
-      ctx.fillRect(0, groundY, width, 15);
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.16)';
-      const tileW = 68;
-      const offset = scrollX % tileW;
-      for (let gx = -offset; gx < width + tileW; gx += tileW) {
-        ctx.fillRect(gx, groundY + 16, 28, 5);
-        ctx.fillRect(gx + 34, groundY + 34, 20, 4);
-      }
-    }
-
-    if (world.id === 'future') {
-      ctx.strokeStyle = 'rgba(0, 245, 212, 0.55)';
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.moveTo(0, groundY + 2);
-      ctx.lineTo(width, groundY + 2);
-      ctx.stroke();
-      ctx.strokeStyle = 'rgba(0, 245, 212, 0.2)';
-      ctx.lineWidth = 1.2;
-      const gridW = 76;
-      const offset = scrollX % gridW;
-      ctx.beginPath();
-      for (let gx = -offset; gx < width + gridW; gx += gridW) {
-        ctx.moveTo(gx, groundY + 2);
-        ctx.lineTo(gx - 28, groundY + 56);
-      }
-      ctx.stroke();
+      ctx.ellipse(cx, cy, 72, 16, 0, 0, Math.PI * 2);
+      ctx.ellipse(cx + 32, cy - 8, 46, 14, 0, 0, Math.PI * 2);
+      ctx.ellipse(cx - 28, cy - 5, 34, 11, 0, 0, Math.PI * 2);
+      ctx.fill();
     }
   }
 
-  const SHOP_SIGNS = ['LAXMI TEA', 'KUKI MASALE', 'GUPTA SWEETS', 'DESI JUTIS', 'RAJA SAREES'];
+  // Layer 2: Distant Background (Mountains, Skyline, Distant Architecture at 0.14x parallax)
+  function drawDistantBackground(ctx, mapId, world, width, groundY, scrollX) {
+    const offset = scrollX * 0.14;
+    const segW = 210;
+    const startIdx = Math.floor(offset / segW) - 1;
+    const count = Math.ceil(width / segW) + 3;
+    ctx.save();
+    ctx.fillStyle = world.farColor;
+
+    for (let i = 0; i < count; i++) {
+      const idx = startIdx + i;
+      const x = idx * segW - offset;
+      const seed = Math.abs(Math.sin(idx * 12.9898) * 43758.5453) % 1;
+      const h = 115 + seed * 65;
+
+      if (mapId === 'palace' || mapId === 'coimbatore' || mapId === 'desert') {
+        // Aravalli hills / Western Ghats / Distant Thar Dunes
+        ctx.beginPath();
+        ctx.moveTo(x - 30, groundY);
+        ctx.quadraticCurveTo(x + segW * 0.5, groundY - h * 1.05, x + segW + 30, groundY);
+        ctx.fill();
+        if (mapId === 'desert' && Math.abs(idx) % 2 === 0) {
+          // Distant Sonar Quila Desert Fort on ridge
+          ctx.fillStyle = '#9e6236';
+          ctx.fillRect(x + segW * 0.34, groundY - h * 0.62 - 22, 66, 22);
+          ctx.fillStyle = '#e63946';
+          ctx.fillRect(x + segW * 0.5, groundY - h * 0.62 - 34, 2, 12);
+          ctx.fillRect(x + segW * 0.5 + 2, groundY - h * 0.62 - 34, 9, 5);
+          ctx.fillStyle = world.farColor;
+        }
+      } else if (mapId === 'future' || mapId === 'bengaluru' || mapId === 'city') {
+        // Distant city skyline / tech towers / temple spires
+        ctx.fillRect(x + 8, groundY - h * 0.9, segW * 0.38, h * 0.9);
+        ctx.fillRect(x + segW * 0.52, groundY - h * 1.08, segW * 0.4, h * 1.08);
+        if (mapId === 'future') {
+          ctx.fillStyle = 'rgba(0, 245, 212, 0.22)';
+          ctx.fillRect(x + 14, groundY - h * 0.85, segW * 0.38 - 12, 3);
+          ctx.fillRect(x + segW * 0.52 + 6, groundY - h * 1.02, segW * 0.4 - 12, 3);
+          ctx.fillStyle = world.farColor;
+        }
+      } else if (mapId === 'fortress') {
+        // Distant fortress ridge + Vijay Stambh silhouette
+        ctx.fillRect(x + 4, groundY - h * 0.62, segW - 8, h * 0.62);
+        if (Math.abs(idx) % 2 === 0) {
+          ctx.fillRect(x + segW * 0.44, groundY - h * 1.15, 22, h * 1.15);
+          ctx.beginPath();
+          ctx.arc(x + segW * 0.44 + 11, groundY - h * 1.15, 11, Math.PI, 0);
+          ctx.fill();
+        }
+      } else if (mapId === 'chennai') {
+        // Distant Marina skyline & lighthouse
+        ctx.fillRect(x + 10, groundY - h * 0.65, segW * 0.42, h * 0.65);
+        if (Math.abs(idx) % 3 === 0) {
+          ctx.fillStyle = '#cbd5e1';
+          ctx.fillRect(x + segW * 0.64, groundY - h * 1.15, 16, h * 1.15);
+          ctx.fillStyle = '#e63946';
+          ctx.fillRect(x + segW * 0.64, groundY - h * 0.9, 16, 14);
+          ctx.fillStyle = '#fde047';
+          ctx.beginPath();
+          ctx.arc(x + segW * 0.64 + 8, groundY - h * 1.15 - 4, 6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = world.farColor;
+        }
+      } else if (mapId === 'kochi') {
+        // Distant palm islands & cantilevered Chinese Fishing Nets (Cheena Vala)
+        ctx.beginPath();
+        ctx.ellipse(x + segW * 0.5, groundY - 26, segW * 0.52, 22, 0, Math.PI, 0);
+        ctx.fill();
+        if (Math.abs(idx) % 2 === 0) {
+          ctx.strokeStyle = '#2d4f4a';
+          ctx.lineWidth = 2.6;
+          ctx.beginPath();
+          ctx.moveTo(x + 42, groundY - 26);
+          ctx.lineTo(x + 98, groundY - 102);
+          ctx.lineTo(x + 142, groundY - 48);
+          ctx.moveTo(x + 98, groundY - 102);
+          ctx.lineTo(x + 68, groundY - 56);
+          ctx.stroke();
+        }
+      } else {
+        // Sundarbans / Hyderabad distant tree line / Golconda ridge
+        ctx.beginPath();
+        ctx.arc(x + segW * 0.28, groundY - h * 0.46, 52, 0, Math.PI * 2);
+        ctx.arc(x + segW * 0.72, groundY - h * 0.52, 58, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
+  // Layer 3: Dedicated Per-Map Landmark Renderers (0.40x parallax)
+  function drawJaipurLandmarks(ctx, width, groundY, offset, time) {
+    const segW = 190;
+    const startIdx = Math.floor(offset / segW) - 1;
+    const count = Math.ceil(width / segW) + 3;
+    for (let i = 0; i < count; i++) {
+      const idx = startIdx + i;
+      const x = idx * segW - offset;
+      const h = 128 + (Math.abs(idx) % 2) * 22;
+      // Pink-sandstone haveli facade
+      ctx.fillStyle = '#e6a685';
+      ctx.fillRect(x + 6, groundY - h, segW - 12, h);
+      ctx.fillStyle = '#f3d1b0';
+      ctx.fillRect(x + 4, groundY - h - 5, segW - 8, 6);
+      // Central Rajputana onion dome & flanking chhatris
+      ctx.fillStyle = '#d98a6c';
+      ctx.beginPath();
+      ctx.arc(x + segW * 0.5, groundY - h - 5, 28, Math.PI, 0);
+      ctx.fill();
+      ctx.fillStyle = '#ffd700';
+      ctx.fillRect(x + segW * 0.5 - 1.5, groundY - h - 44, 3, 12);
+      // Jharokha arched windows
+      ctx.fillStyle = '#6b2d26';
+      for (let a = 0; a < 3; a++) {
+        const ax = x + 22 + a * 52;
+        ctx.beginPath();
+        ctx.arc(ax + 12, groundY - h * 0.56, 12, Math.PI, 0);
+        ctx.lineTo(ax + 24, groundY - 12);
+        ctx.lineTo(ax, groundY - 12);
+        ctx.closePath();
+        ctx.fill();
+      }
+      // Royal courtyard pillars
+      ctx.fillStyle = '#f6dfc5';
+      ctx.fillRect(x + 10, groundY - 64, 7, 64);
+      ctx.fillRect(x + segW - 17, groundY - 64, 7, 64);
+    }
+  }
+
+  const SHOP_SIGNS = ['CHAI', 'SWEETS', 'MASALE', 'FASHION', 'SAREES'];
   const SHOP_COLORS = ['#d97b66', '#e59882', '#c8644f', '#e08e79', '#d4745e'];
 
-  function drawIndianBazaarLayer(ctx, width, groundY, offset, time) {
-    ctx.save();
+  function drawBazaarLandmarks(ctx, width, groundY, offset) {
     const segW = 195;
     const startIdx = Math.floor(offset / segW) - 1;
     const count = Math.ceil(width / segW) + 3;
-
     for (let i = 0; i < count; i++) {
       const idx = startIdx + i;
       const x = idx * segW - offset;
       const color = SHOP_COLORS[Math.abs(idx) % SHOP_COLORS.length];
       const sign = SHOP_SIGNS[Math.abs(idx) % SHOP_SIGNS.length];
-      const bldgH = 178 + (Math.abs(idx * 37) % 3) * 22;
+      const bldgH = 166 + (Math.abs(idx * 37) % 3) * 18;
 
       ctx.fillStyle = color;
       ctx.fillRect(x + 2, groundY - bldgH, segW - 4, bldgH - 10);
-
-      // Overhead wires
+      // Overhead utility wires
       ctx.strokeStyle = 'rgba(40, 25, 20, 0.45)';
       ctx.lineWidth = 1.2;
       ctx.beginPath();
       ctx.moveTo(x, groundY - bldgH + 14);
       ctx.quadraticCurveTo(x + segW * 0.5, groundY - bldgH + 28, x + segW, groundY - bldgH + 14);
       ctx.stroke();
-
-      // Upper Jharokha Arches
+      // Upper Jharokha windows
       ctx.fillStyle = '#5c261d';
       for (let a = 0; a < 3; a++) {
         const ax = x + 22 + a * 54;
@@ -877,302 +944,462 @@ window.GAME_RENDERER = (() => {
         ctx.closePath();
         ctx.fill();
       }
-
-      ctx.fillStyle = '#fae1d8';
-      ctx.fillRect(x + 2, groundY - bldgH, segW - 4, 6);
-
-      // Shop Signboard
+      // Shop signboard
       ctx.fillStyle = '#fff8ef';
-      ctx.fillRect(x + 14, groundY - 94, segW - 28, 22);
+      ctx.fillRect(x + 18, groundY - 92, segW - 36, 21);
       ctx.strokeStyle = '#8b2e20';
       ctx.lineWidth = 2;
-      ctx.strokeRect(x + 14, groundY - 94, segW - 28, 22);
-
+      ctx.strokeRect(x + 18, groundY - 92, segW - 36, 21);
       ctx.fillStyle = '#7a1c14';
       ctx.font = 'bold 11px Poppins, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(sign, x + segW * 0.5, groundY - 79);
-
-      // Shop Interior + Marigold Toran
+      ctx.fillText(sign, x + segW * 0.5, groundY - 77);
+      // Shop interior & marigold toran
       ctx.fillStyle = '#3b1c14';
-      ctx.fillRect(x + 18, groundY - 68, segW - 36, 58);
-
+      ctx.fillRect(x + 18, groundY - 67, segW - 36, 57);
       ctx.fillStyle = '#ff9f1c';
       for (let g = 0; g < 7; g++) {
         ctx.beginPath();
-        ctx.arc(x + 28 + g * 22, groundY - 64 + Math.sin(g) * 3, 4, 0, Math.PI * 2);
+        ctx.arc(x + 28 + g * 22, groundY - 63 + Math.sin(g) * 3, 4, 0, Math.PI * 2);
         ctx.fill();
       }
+    }
+  }
 
+  function drawTharLandmarks(ctx, width, groundY, offset) {
+    const segW = 220;
+    const startIdx = Math.floor(offset / segW) - 1;
+    const count = Math.ceil(width / segW) + 3;
+    for (let i = 0; i < count; i++) {
+      const idx = startIdx + i;
+      const x = idx * segW - offset;
+      const h = 76 + (Math.abs(idx) % 2) * 26;
+      // Sculpted sunlit & shaded sand dune
+      ctx.fillStyle = '#e0a958';
+      ctx.beginPath();
+      ctx.moveTo(x - 30, groundY);
+      ctx.quadraticCurveTo(x + segW * 0.5, groundY - h, x + segW + 30, groundY);
+      ctx.fill();
+      ctx.fillStyle = '#c48636';
+      ctx.beginPath();
+      ctx.moveTo(x + segW * 0.5, groundY - h * 0.52);
+      ctx.lineTo(x + segW + 30, groundY);
+      ctx.lineTo(x + segW * 0.34, groundY);
+      ctx.closePath();
+      ctx.fill();
+      // Camel silhouette on dune ridge
       if (Math.abs(idx) % 2 === 0) {
-        ctx.fillStyle = '#1f242b';
-        ctx.fillRect(x + 6, groundY - 104, 5, 94);
-        ctx.fillStyle = 'rgba(255, 225, 110, 0.9)';
+        ctx.fillStyle = '#6b3e1b';
+        ctx.fillRect(x + 62, groundY - h * 0.55 - 12, 14, 7);
+        ctx.fillRect(x + 64, groundY - h * 0.55 - 5, 2.5, 8);
+        ctx.fillRect(x + 72, groundY - h * 0.55 - 5, 2.5, 8);
+        ctx.fillRect(x + 75, groundY - h * 0.55 - 17, 3, 8);
+      }
+    }
+  }
+
+  function drawSundarbansLandmarks(ctx, width, groundY, offset) {
+    // Winding Sundarbans jungle river strip
+    ctx.fillStyle = '#2d7a78';
+    ctx.fillRect(0, groundY - 24, width, 24);
+    ctx.fillStyle = 'rgba(216, 243, 220, 0.28)';
+    for (let rx = -(offset % 95); rx < width + 95; rx += 95) {
+      ctx.fillRect(rx, groundY - 14, 34, 2);
+    }
+    const segW = 175;
+    const startIdx = Math.floor(offset / segW) - 1;
+    const count = Math.ceil(width / segW) + 3;
+    for (let i = 0; i < count; i++) {
+      const idx = startIdx + i;
+      const x = idx * segW - offset;
+      const h = 115 + (Math.abs(idx) % 2) * 20;
+      // Banyan trunk & hanging aerial prop roots
+      ctx.fillStyle = '#3d2b1f';
+      ctx.fillRect(x + segW * 0.44, groundY - h * 0.72, 16, h * 0.72);
+      ctx.fillRect(x + segW * 0.28, groundY - h * 0.62, 3, h * 0.62);
+      ctx.fillRect(x + segW * 0.66, groundY - h * 0.58, 3, h * 0.58);
+      // Lush canopy
+      ctx.fillStyle = '#1f4d32';
+      ctx.beginPath();
+      ctx.arc(x + segW * 0.5, groundY - h * 0.76, 46, 0, Math.PI * 2);
+      ctx.arc(x + segW * 0.3, groundY - h * 0.66, 28, 0, Math.PI * 2);
+      ctx.arc(x + segW * 0.7, groundY - h * 0.66, 28, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function drawChittorgarhLandmarks(ctx, width, groundY, offset, time) {
+    const segW = 185;
+    const startIdx = Math.floor(offset / segW) - 1;
+    const count = Math.ceil(width / segW) + 3;
+    for (let i = 0; i < count; i++) {
+      const idx = startIdx + i;
+      const x = idx * segW - offset;
+      const h = 110 + (Math.abs(idx) % 2) * 16;
+      ctx.fillStyle = '#8d7563';
+      ctx.fillRect(x + 6, groundY - h, segW - 12, h);
+      // Stone battlements
+      for (let m = 0; m < 5; m++) {
+        ctx.fillRect(x + 8 + m * 34, groundY - h - 12, 18, 12);
+      }
+      // Pol arched gateway
+      ctx.fillStyle = '#3b2c26';
+      ctx.beginPath();
+      ctx.arc(x + segW * 0.5, groundY - 40, 24, Math.PI, 0);
+      ctx.lineTo(x + segW * 0.5 + 24, groundY);
+      ctx.lineTo(x + segW * 0.5 - 24, groundY);
+      ctx.closePath();
+      ctx.fill();
+      // Flickering Mashal fire torches
+      const flick = Math.sin(time * 18 + idx) * 2;
+      ctx.fillStyle = '#ff6b00';
+      ctx.beginPath();
+      ctx.arc(x + 26, groundY - h * 0.48 + flick * 0.4, 6, 0, Math.PI * 2);
+      ctx.arc(x + segW - 26, groundY - h * 0.48 - flick * 0.4, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#fde047';
+      ctx.beginPath();
+      ctx.arc(x + 26, groundY - h * 0.48, 2.8, 0, Math.PI * 2);
+      ctx.arc(x + segW - 26, groundY - h * 0.48, 2.8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function drawNeoBharatLandmarks(ctx, width, groundY, offset, time) {
+    const segW = 165;
+    const startIdx = Math.floor(offset / segW) - 1;
+    const count = Math.ceil(width / segW) + 3;
+    for (let i = 0; i < count; i++) {
+      const idx = startIdx + i;
+      const x = idx * segW - offset;
+      const h = 115 + (Math.abs(idx * 23) % 3) * 24;
+      ctx.fillStyle = '#1b2254';
+      ctx.fillRect(x + 10, groundY - h, segW - 20, h);
+      // Cyber lotus crown
+      ctx.fillStyle = '#d946ef';
+      ctx.beginPath();
+      ctx.moveTo(x + segW * 0.5 - 18, groundY - h);
+      ctx.lineTo(x + segW * 0.5, groundY - h - 22);
+      ctx.lineTo(x + segW * 0.5 + 18, groundY - h);
+      ctx.closePath();
+      ctx.fill();
+      // Cyan neon strips
+      ctx.fillStyle = 'rgba(0, 245, 212, 0.55)';
+      ctx.fillRect(x + 20, groundY - h + 14, segW - 40, 3);
+      ctx.fillRect(x + segW * 0.5 - 2, groundY - h + 24, 4, h - 32);
+    }
+    // Animated flying sky-vehicles
+    const flyX = ((time * 140) % (width + 160)) - 80;
+    ctx.fillStyle = '#00f5d4';
+    ctx.fillRect(flyX, groundY - 148, 28, 6);
+    ctx.fillStyle = '#f472b6';
+    ctx.fillRect(width - flyX, groundY - 118, 24, 5);
+  }
+
+  function drawChennaiLandmarks(ctx, width, groundY, offset) {
+    // Bay of Bengal shimmering ocean + surf waves
+    ctx.fillStyle = '#0284c7';
+    ctx.fillRect(0, groundY - 32, width, 32);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    for (let wx = -(offset % 95); wx < width + 95; wx += 95) {
+      ctx.beginPath();
+      ctx.ellipse(wx + 24, groundY - 15, 26, 2.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    const segW = 190;
+    const startIdx = Math.floor(offset / segW) - 1;
+    const count = Math.ceil(width / segW) + 3;
+    for (let i = 0; i < count; i++) {
+      const idx = startIdx + i;
+      const x = idx * segW - offset;
+      const h = 112;
+      const baseW = segW * 0.52;
+      for (let t = 0; t < 5; t++) {
+        const tw = baseW * (1 - t * 0.16);
+        const th = h / 5;
+        ctx.fillStyle = t % 2 === 1 ? '#e76f51' : '#f4a261';
+        ctx.fillRect(x + (segW - tw) * 0.5, groundY - (t + 1) * th - 30, tw, th + 1);
+      }
+      ctx.fillStyle = '#ffd700';
+      ctx.fillRect(x + segW * 0.5 - 2, groundY - h - 40, 4, 10);
+    }
+  }
+
+  function drawCoimbatoreLandmarks(ctx, width, groundY, offset, time) {
+    const segW = 210;
+    const startIdx = Math.floor(offset / segW) - 1;
+    const count = Math.ceil(width / segW) + 3;
+    for (let i = 0; i < count; i++) {
+      const idx = startIdx + i;
+      const x = idx * segW - offset;
+      const h = 104 + (Math.abs(idx) % 2) * 18;
+      // Terraced tea plantation hill
+      ctx.fillStyle = '#2d6a4f';
+      ctx.beginPath();
+      ctx.moveTo(x - 24, groundY);
+      ctx.quadraticCurveTo(x + segW * 0.5, groundY - h, x + segW + 24, groundY);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(183, 228, 199, 0.36)';
+      ctx.lineWidth = 2;
+      for (let r = 0; r < 3; r++) {
+        const ry = groundY - h * (0.24 + r * 0.16);
         ctx.beginPath();
-        ctx.arc(x + 8.5, groundY - 108, 9, 0, Math.PI * 2);
+        ctx.moveTo(x + 12, ry + 10);
+        ctx.quadraticCurveTo(x + segW * 0.5, ry - 12, x + segW - 12, ry + 10);
+        ctx.stroke();
+      }
+      // Silver-oak shade tree
+      ctx.fillStyle = '#3d2b1f';
+      ctx.fillRect(x + 28, groundY - 56, 5, 56);
+      ctx.fillStyle = '#1b4332';
+      ctx.beginPath();
+      ctx.arc(x + 30.5, groundY - 62, 16, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Nilgiri stone arch viaduct with miniature mountain train
+    ctx.fillStyle = '#6c757d';
+    ctx.fillRect(0, groundY - 54, width, 7);
+    const trainX = ((time * 95) % (width + 200)) - 100;
+    ctx.fillStyle = '#dc2626';
+    ctx.fillRect(trainX, groundY - 66, 48, 12);
+    ctx.fillStyle = '#1d4ed8';
+    ctx.fillRect(trainX + 52, groundY - 65, 42, 11);
+  }
+
+  function drawBengaluruLandmarks(ctx, width, groundY, offset) {
+    const segW = 195;
+    const startIdx = Math.floor(offset / segW) - 1;
+    const count = Math.ceil(width / segW) + 3;
+    for (let i = 0; i < count; i++) {
+      const idx = startIdx + i;
+      const x = idx * segW - offset;
+      // Vidhana Soudha pillared granite facade & central dome
+      ctx.fillStyle = '#c9b79c';
+      ctx.fillRect(x + 14, groundY - 96, segW - 28, 96);
+      ctx.beginPath();
+      ctx.arc(x + segW * 0.5, groundY - 96, 24, Math.PI, 0);
+      ctx.fill();
+      ctx.fillStyle = '#7f6c53';
+      for (let p = 0; p < 5; p++) {
+        ctx.fillRect(x + 26 + p * 32, groundY - 82, 6, 82);
+      }
+      // Blooming pink Tabebuia trees
+      ctx.fillStyle = '#3b2820';
+      ctx.fillRect(x + 14, groundY - 40, 5, 40);
+      ctx.fillStyle = '#f472b6';
+      ctx.beginPath();
+      ctx.arc(x + 16, groundY - 48, 18, 0, Math.PI * 2);
+      ctx.arc(x + 30, groundY - 42, 13, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function drawHyderabadLandmarks(ctx, width, groundY, offset) {
+    // Hussain Sagar Lake reflection strip
+    ctx.fillStyle = 'rgba(79, 70, 229, 0.36)';
+    ctx.fillRect(0, groundY - 22, width, 22);
+    const segW = 195;
+    const startIdx = Math.floor(offset / segW) - 1;
+    const count = Math.ceil(width / segW) + 3;
+    for (let i = 0; i < count; i++) {
+      const idx = startIdx + i;
+      const x = idx * segW - offset;
+      const cx = x + segW * 0.5;
+      // Charminar main body & 4 corner minarets
+      ctx.fillStyle = '#d9c5b2';
+      ctx.fillRect(x + 32, groundY - 76, segW - 64, 62);
+      [x + 26, x + segW - 38].forEach(mx => {
+        ctx.fillStyle = '#d9c5b2';
+        ctx.fillRect(mx, groundY - 126, 12, 112);
+        ctx.fillStyle = '#a68c72';
+        ctx.fillRect(mx - 2, groundY - 92, 16, 4);
+        ctx.fillRect(mx - 2, groundY - 110, 16, 4);
+        ctx.fillStyle = '#d9c5b2';
+        ctx.beginPath();
+        ctx.arc(mx + 6, groundY - 126, 8, Math.PI, 0);
+        ctx.fill();
+      });
+      // Central illuminated arch
+      ctx.fillStyle = 'rgba(255, 224, 150, 0.55)';
+      ctx.beginPath();
+      ctx.arc(cx, groundY - 36, 18, Math.PI, 0);
+      ctx.lineTo(cx + 18, groundY - 14);
+      ctx.lineTo(cx - 18, groundY - 14);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  function drawKochiLandmarks(ctx, width, groundY, offset) {
+    // Emerald Kerala Backwater canal + Kettuvallam houseboats
+    ctx.fillStyle = '#0d6e66';
+    ctx.fillRect(0, groundY - 36, width, 36);
+    ctx.fillStyle = 'rgba(100, 223, 223, 0.25)';
+    for (let rx = -(offset % 85); rx < width + 85; rx += 85) {
+      ctx.fillRect(rx, groundY - 22, 34, 2);
+    }
+    const boatOff = offset * 0.72;
+    for (let bx = -(boatOff % 360); bx < width + 360; bx += 360) {
+      ctx.fillStyle = '#4a2c11';
+      ctx.beginPath();
+      ctx.moveTo(bx + 14, groundY - 13);
+      ctx.lineTo(bx + 126, groundY - 13);
+      ctx.lineTo(bx + 108, groundY - 2);
+      ctx.lineTo(bx + 32, groundY - 2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#d4a373';
+      ctx.beginPath();
+      ctx.arc(bx + 70, groundY - 13, 28, Math.PI, 0);
+      ctx.fill();
+      ctx.fillStyle = '#fde047';
+      ctx.beginPath();
+      ctx.arc(bx + 24, groundY - 18, 3.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Leaning coconut palms along canal bank
+    const segW = 175;
+    const startIdx = Math.floor(offset / segW) - 1;
+    const count = Math.ceil(width / segW) + 3;
+    for (let i = 0; i < count; i++) {
+      const idx = startIdx + i;
+      const x = idx * segW - offset;
+      ctx.strokeStyle = '#5c4033';
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      ctx.moveTo(x + segW * 0.48, groundY - 22);
+      ctx.quadraticCurveTo(x + segW * 0.56, groundY - 76, x + segW * 0.5, groundY - 120);
+      ctx.stroke();
+      ctx.fillStyle = '#15803d';
+      for (let f = -2; f <= 2; f++) {
+        ctx.beginPath();
+        ctx.ellipse(x + segW * 0.5 + f * 14, groundY - 120, 22, 5.5, f * 0.35, 0, Math.PI * 2);
         ctx.fill();
       }
+    }
+  }
+
+  function drawLandmarks(ctx, mapId, width, groundY, scrollX, time) {
+    const offset = scrollX * 0.42;
+    ctx.save();
+    switch (mapId) {
+      case 'palace': drawJaipurLandmarks(ctx, width, groundY, offset, time); break;
+      case 'city': drawBazaarLandmarks(ctx, width, groundY, offset); break;
+      case 'desert': drawTharLandmarks(ctx, width, groundY, offset); break;
+      case 'jungle': drawSundarbansLandmarks(ctx, width, groundY, offset); break;
+      case 'fortress': drawChittorgarhLandmarks(ctx, width, groundY, offset, time); break;
+      case 'future': drawNeoBharatLandmarks(ctx, width, groundY, offset, time); break;
+      case 'chennai': drawChennaiLandmarks(ctx, width, groundY, offset); break;
+      case 'coimbatore': drawCoimbatoreLandmarks(ctx, width, groundY, offset, time); break;
+      case 'bengaluru': drawBengaluruLandmarks(ctx, width, groundY, offset); break;
+      case 'hyderabad': drawHyderabadLandmarks(ctx, width, groundY, offset); break;
+      case 'kochi': drawKochiLandmarks(ctx, width, groundY, offset); break;
+      default: drawJaipurLandmarks(ctx, width, groundY, offset, time); break;
     }
     ctx.restore();
   }
 
-  function drawParallaxLayer(ctx, width, groundY, offset, color, maxH, worldId, layer, time) {
-    ctx.save();
-    ctx.fillStyle = color;
-    const segW = layer === 'far' ? 196 : 156;
-    const startIdx = Math.floor(offset / segW) - 1;
-    const count = Math.ceil(width / segW) + 3;
+  // Layer 4: Gameplay Ground & Road Foreground
+  function drawGround(ctx, map, mapId, world, width, height, groundY, scrollX) {
+    ctx.fillStyle = map.ground || world.groundBody;
+    ctx.fillRect(0, groundY, width, height - groundY);
 
-    for (let i = 0; i < count; i++) {
-      const idx = startIdx + i;
-      const x = idx * segW - offset;
-      const seed = Math.abs(Math.sin(idx * 12.9898) * 43758.5453) % 1;
-      const h = maxH * (0.52 + seed * 0.48);
-
-      if (worldId === 'palace') {
-        // Jaipur Pink City: Hawa Mahal Jharokhas, Fluted Domes & Kalash Finials
-        ctx.fillRect(x + 8, groundY - h * 0.72, segW - 16, h * 0.72);
-        // Parapet & cornice
-        ctx.fillStyle = layer === 'mid' ? '#e8c488' : shadeColor(color, 12);
-        ctx.fillRect(x + 6, groundY - h * 0.74, segW - 12, 5);
-        ctx.fillStyle = color;
-        // Central Rajputana onion dome + chhatri
-        ctx.beginPath();
-        ctx.arc(x + segW * 0.5, groundY - h * 0.74, (segW - 44) * 0.3, Math.PI, 0);
-        ctx.fill();
-        ctx.fillStyle = '#ffd700';
-        ctx.fillRect(x + segW * 0.5 - 1.5, groundY - h * 0.74 - (segW - 44) * 0.3 - 12, 3, 12);
-        if (layer === 'mid') {
-          // Glowing cusped palace arches & jharokha windows
-          ctx.fillStyle = 'rgba(255, 224, 130, 0.34)';
-          for (let a = 0; a < 3; a++) {
-            const ax = x + 22 + a * 42;
-            ctx.beginPath();
-            ctx.arc(ax + 11, groundY - h * 0.42, 10, Math.PI, 0);
-            ctx.lineTo(ax + 21, groundY - 14);
-            ctx.lineTo(ax + 1, groundY - 14);
-            ctx.closePath();
-            ctx.fill();
-          }
-        }
-        ctx.fillStyle = color;
-      } else if (worldId === 'fortress') {
-        // Chittorgarh Fortress: Crenelated Stone Battlements, Vijay Stambh & Mashal Torches
-        ctx.fillRect(x + 6, groundY - h * 0.76, segW - 12, h * 0.76);
-        // Battlement merlons
-        for (let m = 0; m < 5; m++) {
-          ctx.fillRect(x + 8 + m * 28, groundY - h * 0.76 - 11, 16, 12);
-        }
-        if (layer === 'far' && Math.abs(idx) % 2 === 0) {
-          // Distant Vijay Stambh Victory Tower
-          ctx.fillRect(x + segW * 0.42, groundY - h * 1.15, 22, h * 1.15);
-          ctx.beginPath();
-          ctx.arc(x + segW * 0.42 + 11, groundY - h * 1.15, 11, Math.PI, 0);
-          ctx.fill();
-        }
-        if (layer === 'mid') {
-          // Arched stone gate + flickering Mashal fire
-          ctx.fillStyle = '#200f18';
-          ctx.beginPath();
-          ctx.arc(x + segW * 0.5, groundY - 38, 22, Math.PI, 0);
-          ctx.lineTo(x + segW * 0.5 + 22, groundY);
-          ctx.lineTo(x + segW * 0.5 - 22, groundY);
-          ctx.closePath();
-          ctx.fill();
-          const flick = Math.sin(time * 18 + idx) * 2;
-          ctx.fillStyle = '#ff6b00';
-          ctx.beginPath();
-          ctx.arc(x + 22, groundY - h * 0.46 + flick * 0.4, 5.5, 0, Math.PI * 2);
-          ctx.arc(x + segW - 22, groundY - h * 0.46 - flick * 0.4, 5.5, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = '#fde047';
-          ctx.beginPath();
-          ctx.arc(x + 22, groundY - h * 0.46, 2.5, 0, Math.PI * 2);
-          ctx.arc(x + segW - 22, groundY - h * 0.46, 2.5, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        ctx.fillStyle = color;
-      } else if (worldId === 'chennai') {
-        // Chennai: Multi-Tiered Dravidian Gopuram Temple Towers + Marina Lighthouse
-        if (layer === 'far' && Math.abs(idx) % 3 === 0) {
-          // Marina Beach Lighthouse
-          ctx.fillStyle = '#cbd5e1';
-          ctx.fillRect(x + segW * 0.45, groundY - h * 1.18, 18, h * 1.18);
-          ctx.fillStyle = '#e63946';
-          ctx.fillRect(x + segW * 0.45, groundY - h * 0.9, 18, 16);
-          ctx.fillStyle = '#fde047';
-          ctx.beginPath();
-          ctx.arc(x + segW * 0.45 + 9, groundY - h * 1.18 - 5, 7, 0, Math.PI * 2);
-          ctx.fill();
-        } else {
-          const tiers = 5;
-          const baseW = segW * 0.56;
-          for (let t = 0; t < tiers; t++) {
-            const tw = baseW * (1 - t * 0.16);
-            const th = (h * 0.88) / tiers;
-            ctx.fillStyle = layer === 'mid' ? (t % 2 === 1 ? '#e76f51' : '#f4a261') : color;
-            ctx.fillRect(x + (segW - tw) * 0.5, groundY - (t + 1) * th - 28, tw, th + 1);
-          }
-          // Golden Kalasam finial on top
-          ctx.fillStyle = '#ffd700';
-          ctx.fillRect(x + segW * 0.5 - 2, groundY - h * 0.88 - 38, 4, 10);
-        }
-        ctx.fillStyle = color;
-      } else if (worldId === 'hyderabad') {
-        // Hyderabad: Iconic 4-Minaret Charminar & Deccan Arches
-        const cx = x + segW * 0.5;
-        ctx.fillRect(x + 22, groundY - h * 0.58 - 14, segW - 44, h * 0.58);
-        // 4 Corner Minarets with tiered balconies & onion domes
-        [x + 18, x + segW - 30].forEach(mx => {
-          ctx.fillStyle = color;
-          ctx.fillRect(mx, groundY - h * 0.98 - 14, 12, h * 0.98);
-          ctx.fillStyle = layer === 'mid' ? '#f7b267' : shadeColor(color, 14);
-          ctx.fillRect(mx - 2, groundY - h * 0.72 - 14, 16, 4);
-          ctx.fillRect(mx - 2, groundY - h * 0.88 - 14, 16, 4);
-          ctx.fillStyle = color;
-          ctx.beginPath();
-          ctx.arc(mx + 6, groundY - h * 0.98 - 14, 8, Math.PI, 0);
-          ctx.fill();
-        });
-        if (layer === 'mid') {
-          ctx.fillStyle = 'rgba(255, 229, 180, 0.34)';
-          ctx.beginPath();
-          ctx.arc(cx, groundY - 34, 18, Math.PI, 0);
-          ctx.lineTo(cx + 18, groundY - 14);
-          ctx.lineTo(cx - 18, groundY - 14);
-          ctx.closePath();
-          ctx.fill();
-        }
-        ctx.fillStyle = color;
-      } else if (worldId === 'coimbatore') {
-        // Coimbatore & Nilgiris: Layered Western Ghats + Terraced Tea Plantations + Silver Oaks
-        ctx.beginPath();
-        ctx.moveTo(x - 30, groundY);
-        ctx.quadraticCurveTo(x + segW * 0.5, groundY - h * 1.18, x + segW + 30, groundY);
-        ctx.fill();
-        if (layer === 'mid') {
-          // Terraced tea contour lines
-          ctx.strokeStyle = 'rgba(183, 228, 199, 0.32)';
-          ctx.lineWidth = 2;
-          for (let r = 0; r < 3; r++) {
-            const ry = groundY - h * (0.24 + r * 0.16);
-            ctx.beginPath();
-            ctx.moveTo(x + 10, ry + 10);
-            ctx.quadraticCurveTo(x + segW * 0.5, ry - 12, x + segW - 10, ry + 10);
-            ctx.stroke();
-          }
-          // Silver-oak shade tree
-          ctx.fillStyle = '#3d2b1f';
-          ctx.fillRect(x + 28, groundY - 56, 5, 56);
-          ctx.fillStyle = '#1b4332';
-          ctx.beginPath();
-          ctx.arc(x + 30.5, groundY - 62, 16, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        ctx.fillStyle = color;
-      } else if (worldId === 'bengaluru') {
-        // Bengaluru: Vidhana Soudha Pillared Facade + Blooming Pink Tabebuia Trees
-        ctx.fillRect(x + 10, groundY - h * 0.72, segW - 20, h * 0.72);
-        // Central dome
-        ctx.beginPath();
-        ctx.arc(x + segW * 0.5, groundY - h * 0.72, 22, Math.PI, 0);
-        ctx.fill();
-        if (layer === 'mid') {
-          // Classical granite pillars
-          ctx.fillStyle = 'rgba(226, 232, 240, 0.25)';
-          for (let p = 0; p < 5; p++) {
-            ctx.fillRect(x + 22 + p * 26, groundY - h * 0.62, 6, h * 0.62);
-          }
-          // Blooming pink Tabebuia blossom tree in Cubbon Park
-          ctx.fillStyle = '#3b2820';
-          ctx.fillRect(x + 16, groundY - 36, 5, 36);
-          ctx.fillStyle = '#f472b6';
-          ctx.beginPath();
-          ctx.arc(x + 18, groundY - 44, 17, 0, Math.PI * 2);
-          ctx.arc(x + 30, groundY - 38, 12, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        ctx.fillStyle = color;
-      } else if (worldId === 'kochi') {
-        // Kochi: Chinese Fishing Nets (far) & Leaning Coconut Palms (mid)
-        if (layer === 'far' && Math.abs(idx) % 2 === 0) {
-          // Cantilevered Chinese Fishing Net (Cheena Vala)
-          ctx.strokeStyle = color;
-          ctx.lineWidth = 3;
-          ctx.beginPath();
-          ctx.moveTo(x + 40, groundY - 26);
-          ctx.lineTo(x + 95, groundY - 96);
-          ctx.lineTo(x + 135, groundY - 46);
-          ctx.moveTo(x + 95, groundY - 96);
-          ctx.lineTo(x + 65, groundY - 52);
-          ctx.stroke();
-        } else {
-          // Leaning Coconut Palm Trunk & Coconuts
-          ctx.strokeStyle = layer === 'mid' ? '#5c4033' : color;
-          ctx.lineWidth = 7;
-          ctx.beginPath();
-          ctx.moveTo(x + segW * 0.48, groundY - 22);
-          ctx.quadraticCurveTo(x + segW * 0.56, groundY - h * 0.5, x + segW * 0.5, groundY - h * 0.84 - 22);
-          ctx.stroke();
-          ctx.fillStyle = layer === 'mid' ? '#15803d' : color;
-          for (let f = -2; f <= 2; f++) {
-            ctx.beginPath();
-            ctx.ellipse(x + segW * 0.5 + f * 14, groundY - h * 0.84 - 22, 22, 5.5, f * 0.35, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-        ctx.fillStyle = color;
-      } else if (worldId === 'desert') {
-        // Thar Desert: Sculpted Sand Dunes + Distant Golden Fort Bastions
-        ctx.beginPath();
-        ctx.moveTo(x - 28, groundY);
-        ctx.quadraticCurveTo(x + segW * 0.5, groundY - h, x + segW + 28, groundY);
-        ctx.fill();
-        if (layer === 'mid') {
-          ctx.fillStyle = shadeColor(color, -14);
-          ctx.beginPath();
-          ctx.moveTo(x + segW * 0.5, groundY - h * 0.5);
-          ctx.lineTo(x + segW + 28, groundY);
-          ctx.lineTo(x + segW * 0.32, groundY);
-          ctx.closePath();
-          ctx.fill();
-        }
-        ctx.fillStyle = color;
-      } else if (worldId === 'jungle') {
-        // Sundarbans: Massive Banyan Canopy + Hanging Aerial Prop Roots + Mossy Ruins
-        ctx.fillStyle = layer === 'mid' ? '#3d2b1f' : color;
-        ctx.fillRect(x + segW * 0.44, groundY - h * 0.68, 16, h * 0.68);
-        if (layer === 'mid') {
-          // Aerial prop roots
-          ctx.fillRect(x + segW * 0.3, groundY - h * 0.6, 3, h * 0.6);
-          ctx.fillRect(x + segW * 0.64, groundY - h * 0.58, 3, h * 0.58);
-        }
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.arc(x + segW * 0.5, groundY - h * 0.72, 46, 0, Math.PI * 2);
-        ctx.arc(x + segW * 0.32, groundY - h * 0.62, 28, 0, Math.PI * 2);
-        ctx.arc(x + segW * 0.68, groundY - h * 0.62, 28, 0, Math.PI * 2);
-        ctx.fill();
-      } else {
-        // Neo-Bharat 2099: Cyber Lotus Skyscrapers & Glowing Cyan Strips
-        ctx.fillRect(x + 10, groundY - h, segW - 20, h);
-        // Lotus crown spire
-        ctx.beginPath();
-        ctx.moveTo(x + segW * 0.5 - 16, groundY - h);
-        ctx.lineTo(x + segW * 0.5, groundY - h - 24);
-        ctx.lineTo(x + segW * 0.5 + 16, groundY - h);
-        ctx.closePath();
-        ctx.fill();
-        if (layer === 'mid') {
-          ctx.fillStyle = 'rgba(0, 245, 212, 0.45)';
-          ctx.fillRect(x + 20, groundY - h + 14, segW - 40, 3.5);
-          ctx.fillRect(x + 20, groundY - h + 28, segW - 40, 3);
-          ctx.fillRect(x + segW * 0.5 - 2, groundY - h + 40, 4, h - 48);
-          ctx.fillStyle = color;
-        }
+    if (mapId === 'city' || mapId === 'bengaluru') {
+      ctx.fillStyle = mapId === 'city' ? '#b85d4b' : '#64748b';
+      ctx.fillRect(0, groundY - 10, width, 12);
+      ctx.fillStyle = '#3f4754';
+      ctx.fillRect(0, groundY + 2, width, height - groundY);
+      ctx.fillStyle = '#f8f9fa';
+      const dashGap = 70;
+      const dashOffset = scrollX % dashGap;
+      for (let gx = -dashOffset; gx < width + dashGap; gx += dashGap) {
+        ctx.fillRect(gx, groundY + 38, 36, 5);
+      }
+    } else if (mapId === 'future') {
+      ctx.fillStyle = '#1b2244';
+      ctx.fillRect(0, groundY, width, 14);
+      ctx.strokeStyle = 'rgba(0, 245, 212, 0.55)';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(0, groundY + 2);
+      ctx.lineTo(width, groundY + 2);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(0, 245, 212, 0.22)';
+      ctx.lineWidth = 1.2;
+      const gridW = 76;
+      const offset = scrollX % gridW;
+      ctx.beginPath();
+      for (let gx = -offset; gx < width + gridW; gx += gridW) {
+        ctx.moveTo(gx, groundY + 2);
+        ctx.lineTo(gx - 28, groundY + 56);
+      }
+      ctx.stroke();
+    } else if (mapId === 'palace' || mapId === 'hyderabad' || mapId === 'fortress') {
+      ctx.fillStyle = world.groundTop;
+      ctx.fillRect(0, groundY, width, 16);
+      ctx.fillStyle = mapId === 'palace' ? 'rgba(255, 215, 0, 0.35)' : 'rgba(255, 255, 255, 0.14)';
+      ctx.fillRect(0, groundY, width, 3);
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.22)';
+      ctx.lineWidth = 1.5;
+      const tileW = 72;
+      const offset = scrollX % tileW;
+      ctx.beginPath();
+      for (let gx = -offset; gx < width + tileW; gx += tileW) {
+        ctx.moveTo(gx, groundY);
+        ctx.lineTo(gx - 18, groundY + 46);
+      }
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = world.groundTop;
+      ctx.fillRect(0, groundY, width, 15);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.14)';
+      const tileW = 68;
+      const offset = scrollX % tileW;
+      for (let gx = -offset; gx < width + tileW; gx += tileW) {
+        ctx.fillRect(gx, groundY + 18, 28, 5);
+        ctx.fillRect(gx + 34, groundY + 34, 20, 4);
       }
     }
+  }
+
+  // Layer 5: Environmental Particles & Atmosphere Effects
+  function drawEnvironmentEffects(ctx, map, width, groundY, scrollX, time) {
+    const pType = map.particles;
+    ctx.save();
+    const colorMap = {
+      gold_dust: 'rgba(255, 215, 0, 0.55)',
+      street_dust: 'rgba(255, 230, 190, 0.35)',
+      sand_particles: 'rgba(244, 180, 90, 0.55)',
+      leaves_fireflies: 'rgba(190, 242, 100, 0.72)',
+      torch_sparks: 'rgba(255, 140, 40, 0.75)',
+      neon_sparks: 'rgba(0, 245, 212, 0.7)',
+      sea_spray: 'rgba(224, 242, 254, 0.65)',
+      mist_leaves: 'rgba(255, 255, 255, 0.32)',
+      pink_petals: 'rgba(244, 114, 182, 0.78)',
+      warm_lights: 'rgba(253, 224, 71, 0.6)',
+      water_spray: 'rgba(186, 230, 253, 0.6)'
+    };
+    ctx.fillStyle = colorMap[pType] || 'rgba(255, 255, 255, 0.35)';
+    for (let i = 0; i < 12; i++) {
+      const px = (((i * 157 - scrollX * 0.55 - time * 35) % width) + width) % width;
+      const py = groundY * (0.28 + ((i * 53) % 65) / 100) + Math.sin(time * 2.5 + i) * 10;
+      const r = pType === 'pink_petals' ? 3.2 : 2.1;
+      ctx.beginPath();
+      ctx.arc(px, py, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.restore();
+  }
+
+  // Unified 5-Layer Render Entry Point (matches existing game.js signature)
+  function drawBackground(ctx, width, height, groundY, world, scrollX, time) {
+    const mapId = world.id;
+    const map = MAP_TEMPLATES[mapId] || MAP_TEMPLATES.palace;
+    drawSky(ctx, map, world, width, height, groundY, scrollX, time);
+    drawDistantBackground(ctx, mapId, world, width, groundY, scrollX);
+    drawLandmarks(ctx, mapId, width, groundY, scrollX, time);
+    drawGround(ctx, map, mapId, world, width, height, groundY, scrollX);
+    drawEnvironmentEffects(ctx, map, width, groundY, scrollX, time);
   }
 
   // ==================== REALISTIC INDIAN OBSTACLES ====================
